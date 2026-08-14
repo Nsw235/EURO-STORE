@@ -6,9 +6,9 @@ Application boutique (caisse vendeur + dashboard admin) fidèle aux maquettes fo
 
 ```
 euro-store/
-├── index.html                    # Connexion (Espace Vendeur / Administrateur)
-├── caisse.html                   # Espace Vendeur — Caisse & Réception stock
-├── admin.html                    # Espace Administrateur — Dashboard & pilotage
+├── index.html                    # Connexion unifiée (e-mail + mot de passe)
+├── caisse.html                   # Caisse virtuelle — vente & réception stock
+├── admin.html                    # Pilotage boutique — dashboard & gestion
 ├── manifest.json                 # Manifeste PWA
 ├── sw.js                         # Service worker (cache app shell, mode offline)
 ├── netlify.toml                  # Config déploiement Netlify
@@ -27,8 +27,41 @@ via `js/db.js`. L'app est **utilisable et démontrable hors ligne dès l'ouvertu
 catalogue Apple/Samsung/Xiaomi/Tecno/Infinix prérempli, unités de stock avec IMEI,
 historique de ventes de démo.
 
-- **Connexion admin démo : `admin123`** (modifiable dans `js/db.js` → `DB_KEYS.config`)
-- **Espace vendeur** : saisir un prénom, pas de mot de passe (accès simplifié comptoir)
+### Connexion unifiée — rôle détecté automatiquement
+
+Il n'y a plus de sélecteur "Vendeur / Administrateur" à l'écran : un seul
+formulaire e-mail + mot de passe (`index.html`). Le rôle est résolu
+silencieusement à partir du compte reconnu (voir `SEED_USERS` dans
+`js/db.js`) et redirige vers `caisse.html` ou `admin.html` en conséquence —
+le mot "Administrateur" n'apparaît nulle part côté interface.
+
+Comptes de démo (à remplacer avant mise en production) :
+
+| E-mail | Mot de passe | Rôle |
+|---|---|---|
+| camille@eurostore.fr | admin123 | Pilotage boutique |
+| sofia@eurostore.fr | vendeur123 | Caisse |
+| yanis@eurostore.fr | vendeur123 | Caisse |
+
+## Scan par caméra
+
+En plus de la saisie clavier/douchette, la caisse (`caisse.html`) et la
+réception de stock permettent de scanner un code-barres EAN/IMEI ou un QR
+code directement avec la caméra de l'appareil, via la bibliothèque
+[html5-qrcode](https://github.com/mebjas/html5-qrcode) (chargée depuis un
+CDN). Cliquez sur l'icône caméra à côté du champ de scan : la caméra arrière
+s'ouvre dans une fenêtre, le code détecté remplit automatiquement le champ
+et déclenche la recherche — sans étape manuelle supplémentaire.
+
+Notes :
+- Nécessite HTTPS (ou `localhost`) et l'autorisation d'accès caméra du
+  navigateur — c'est le cas par défaut sur Netlify/Cloudflare Pages.
+- Si la caméra n'est pas disponible (hors ligne sans cache CDN, permission
+  refusée, aucun périphérique), l'app retombe automatiquement sur la saisie
+  manuelle avec un message explicite — aucune fonctionnalité n'est bloquée.
+- Pour un usage 100% offline garanti, téléchargez `html5-qrcode.min.js` en
+  local (dans `js/`) et remplacez l'URL CDN dans `caisse.html` par le
+  chemin local ; ajoutez-le aussi à la liste `ASSETS` de `sw.js`.
 
 ## Déploiement Netlify (aucune étape de build)
 

@@ -22,7 +22,7 @@
     padding:24px;
   }
   .mono{font-family:'JetBrains Mono',monospace;}
-  .wrap{width:100%; max-width:420px;}
+  .wrap{width:100%; max-width:400px;}
   .brand{display:flex; flex-direction:column; align-items:center; gap:14px; margin-bottom:36px; text-align:center;}
   .signal-mark{display:flex; align-items:flex-end; gap:4px; height:30px;}
   .signal-mark span{width:7px; background:var(--signal); border-radius:2px; display:block;}
@@ -31,14 +31,15 @@
   .brand-name{font-family:'Space Grotesk'; font-weight:700; font-size:26px; letter-spacing:.3px;}
   .brand-slogan{color:var(--muted); font-size:13px; letter-spacing:.2px;}
 
-  .card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:8px; }
-  .role-tabs{display:flex; gap:4px; background:var(--surface-2); padding:4px; border-radius:14px; margin:8px;}
-  .role-tab{flex:1; text-align:center; padding:12px; border-radius:11px; font-size:13.5px; font-weight:600; color:var(--muted); cursor:pointer; transition:.15s;}
-  .role-tab.active{background:var(--signal-dim); color:var(--signal);}
+  .card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:28px 26px 26px;}
+  .card h2{font-family:'Space Grotesk'; font-size:18px; margin-bottom:6px;}
+  .card p{color:var(--muted); font-size:13px; margin-bottom:22px;}
 
-  .panel{padding:26px 24px 24px;}
-  .panel h2{font-family:'Space Grotesk'; font-size:18px; margin-bottom:6px;}
-  .panel p{color:var(--muted); font-size:13px; margin-bottom:22px;}
+  .error{
+    display:none; align-items:center; gap:8px; background:var(--danger-dim); color:var(--danger);
+    border-radius:10px; padding:10px 13px; font-size:12.5px; margin-bottom:14px;
+  }
+  .error.show{display:flex;}
 
   .field{margin-bottom:16px;}
   .field label{display:block; font-size:12px; color:var(--muted); margin-bottom:7px; text-transform:uppercase; letter-spacing:.5px;}
@@ -54,14 +55,8 @@
     font-size:15px; padding:15px; cursor:pointer; margin-top:6px; transition:transform .12s ease, filter .12s ease;
   }
   .btn-go:active{transform:scale(.98); filter:brightness(.95);}
+  .btn-go[disabled]{opacity:.6; cursor:not-allowed;}
 
-  .error{
-    display:none; align-items:center; gap:8px; background:var(--danger-dim); color:var(--danger);
-    border-radius:10px; padding:10px 13px; font-size:12.5px; margin-bottom:14px;
-  }
-  .error.show{display:flex;}
-
-  .hint{margin-top:16px; text-align:center; color:var(--muted); font-size:11.5px;}
   .status-line{display:flex; align-items:center; justify-content:center; gap:8px; margin-top:22px; color:var(--muted); font-size:12px;}
   .status-line i{width:7px; height:7px; border-radius:50%; background:var(--signal); box-shadow:0 0 8px var(--signal); display:inline-block;}
   .status-line.offline i{background:var(--danger); box-shadow:0 0 8px var(--danger);}
@@ -79,35 +74,18 @@
     </div>
 
     <div class="card">
-      <div class="role-tabs">
-        <div class="role-tab active" data-role="vendeur">Espace Vendeur</div>
-        <div class="role-tab" data-role="admin">Administrateur</div>
+      <h2>Connexion</h2>
+      <p>Connectez-vous avec votre adresse e-mail professionnelle.</p>
+      <div class="error" id="loginError"><span>⚠</span><span></span></div>
+      <div class="field">
+        <label>Adresse e-mail</label>
+        <input type="email" id="email" placeholder="vous@eurostore.fr" autocomplete="username">
       </div>
-
-      <!-- Vendeur -->
-      <div class="panel" id="panel-vendeur">
-        <h2>Accès comptoir</h2>
-        <p>Sélectionnez votre profil pour ouvrir la caisse.</p>
-        <div class="error" id="err-vendeur"><span>⚠</span><span></span></div>
-        <div class="field">
-          <label>Prénom / initiales</label>
-          <input type="text" id="vendeurName" placeholder="Ex. Sofia M." maxlength="40">
-        </div>
-        <button class="btn-go" id="btnVendeur">Ouvrir la caisse</button>
+      <div class="field">
+        <label>Mot de passe</label>
+        <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
       </div>
-
-      <!-- Admin -->
-      <div class="panel" id="panel-admin" style="display:none;">
-        <h2>Accès sécurisé</h2>
-        <p>Réservé aux administrateurs de la boutique.</p>
-        <div class="error" id="err-admin"><span>⚠</span><span></span></div>
-        <div class="field">
-          <label>Mot de passe</label>
-          <input type="password" id="adminPassword" placeholder="••••••••">
-        </div>
-        <button class="btn-go" id="btnAdmin">Se connecter</button>
-        <div class="hint mono">Démo : admin123</div>
-      </div>
+      <button class="btn-go" id="btnLogin">Se connecter</button>
     </div>
 
     <div class="status-line" id="statusLine"><i></i><span>Connecté</span></div>
@@ -115,40 +93,37 @@
 
 <script src="js/db.js"></script>
 <script>
-  const tabs = document.querySelectorAll('.role-tab');
-  const panels = { vendeur: document.getElementById('panel-vendeur'), admin: document.getElementById('panel-admin') };
-  tabs.forEach(t => t.addEventListener('click', () => {
-    tabs.forEach(x => x.classList.remove('active'));
-    t.classList.add('active');
-    Object.values(panels).forEach(p => p.style.display = 'none');
-    panels[t.dataset.role].style.display = 'block';
-  }));
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+  const btnLogin = document.getElementById('btnLogin');
+  const errBox = document.getElementById('loginError');
 
-  function showError(id, msg) {
-    const el = document.getElementById(id);
-    el.querySelector('span:last-child').textContent = msg;
-    el.classList.add('show');
+  function showError(msg) {
+    errBox.querySelector('span:last-child').textContent = msg;
+    errBox.classList.add('show');
   }
 
-  document.getElementById('btnVendeur').addEventListener('click', async () => {
-    const name = document.getElementById('vendeurName').value.trim();
-    const session = await EuroStoreDB.Auth.loginVendeur(name);
-    window.location.href = 'caisse.html';
-  });
-
-  document.getElementById('btnAdmin').addEventListener('click', async () => {
-    const pw = document.getElementById('adminPassword').value;
-    document.getElementById('err-admin').classList.remove('show');
+  async function attemptLogin() {
+    errBox.classList.remove('show');
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+    if (!email || !password) { showError('Veuillez renseigner votre e-mail et votre mot de passe.'); return; }
+    btnLogin.disabled = true;
     try {
-      await EuroStoreDB.Auth.loginAdmin(pw);
-      window.location.href = 'admin.html';
+      // The app resolves the account's role (admin / vendeur) silently —
+      // it is never selected or shown on this screen.
+      const session = await EuroStoreDB.Auth.login(email, password);
+      window.location.href = session.role === 'admin' ? 'admin.html' : 'caisse.html';
     } catch (e) {
-      showError('err-admin', e.message);
+      showError(e.message);
+      btnLogin.disabled = false;
     }
-  });
-  document.getElementById('adminPassword').addEventListener('keydown', e => {
-    if (e.key === 'Enter') document.getElementById('btnAdmin').click();
-  });
+  }
+
+  btnLogin.addEventListener('click', attemptLogin);
+  [emailInput, passwordInput].forEach(el => el.addEventListener('keydown', e => {
+    if (e.key === 'Enter') attemptLogin();
+  }));
 
   function updateStatus() {
     const line = document.getElementById('statusLine');
@@ -159,7 +134,6 @@
   window.addEventListener('offline', updateStatus);
   updateStatus();
 
-  // Register service worker for PWA/offline support
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>

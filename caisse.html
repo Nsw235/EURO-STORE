@@ -96,6 +96,19 @@
   .scan-box input{flex:1; background:transparent; border:none; outline:none; color:var(--ink); font-family:'JetBrains Mono'; font-size:16px;}
   .scan-box input::placeholder{color:var(--muted); font-family:'Inter';}
   .kbd{font-family:'JetBrains Mono'; font-size:11px; color:var(--muted); background:var(--surface-2); padding:3px 7px; border-radius:6px; border:1px solid var(--line);}
+  .cam-btn{width:34px; height:34px; border-radius:9px; background:var(--surface-2); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; transition:.15s;}
+  .cam-btn:hover{border-color:var(--signal);}
+  .cam-btn svg{width:16px; height:16px; color:var(--muted);}
+
+  .cam-modal-bg{display:none; position:fixed; inset:0; background:rgba(10,12,16,.72); align-items:center; justify-content:center; z-index:200;}
+  .cam-modal-bg.show{display:flex;}
+  .cam-modal{background:var(--surface); border:1px solid var(--line); border-radius:20px; padding:20px; width:380px; max-width:92vw;}
+  .cam-modal h3{font-family:'Space Grotesk'; font-size:15px; margin-bottom:4px;}
+  .cam-modal p{color:var(--muted); font-size:12.5px; margin-bottom:14px;}
+  #camReader{width:100%; border-radius:14px; overflow:hidden; background:#000; min-height:260px;}
+  .cam-status{margin-top:12px; font-size:12.5px; color:var(--muted); text-align:center;}
+  .cam-status.err{color:var(--danger);}
+  .cam-close{width:100%; margin-top:14px; background:var(--surface-2); border:1px solid var(--line); border-radius:12px; color:var(--ink); font-weight:600; font-size:13.5px; padding:12px; cursor:pointer;}
   .scan-hint{font-size:11.5px; color:var(--muted); padding:0 4px;}
   .scan-error{display:none; align-items:center; gap:8px; background:var(--danger-dim); color:var(--danger); border-radius:12px; padding:12px 16px; font-size:13px;}
   .scan-error.show{display:flex;}
@@ -148,7 +161,7 @@
       <div class="signal-mark"><span></span><span></span><span></span><span></span></div>
       <div>
         <div class="brand-name">EURO STORE</div>
-        <div class="brand-sub">Poste caisse · Comptoir</div>
+        <div class="brand-sub">Caisse virtuelle</div>
       </div>
     </div>
 
@@ -202,9 +215,12 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7V4h3M17 4h3v3M20 17v3h-3M7 20H4v-3"/><line x1="4" y1="12" x2="20" y2="12"/></svg>
         <input type="text" id="scanInput" placeholder="Scanner EAN ou IMEI…" autofocus>
         <span class="kbd">Entrée</span>
+        <div class="cam-btn" id="btnCamScan" title="Scanner avec la caméra">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </div>
       </div>
       <div class="scan-error" id="scanError"><span>⚠</span><span></span></div>
-      <div class="scan-hint" id="scanHint">Astuce : essayez 352094088729145 (iPhone 15 Pro) ou 8806094567001 (Galaxy S24).</div>
+      <div class="scan-hint" id="scanHint">Astuce : essayez 352094088729145 (iPhone 15 Pro) ou 8806094567001 (Galaxy S24), ou utilisez l'icône caméra.</div>
 
       <button class="btn-vendre" id="btnVendre" disabled>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="4 12 9 17 20 6"/></svg>
@@ -225,7 +241,12 @@
       <h3><span class="step-num">1</span> Scan de la boîte produit</h3>
       <div class="field">
         <label>Code EAN</label>
-        <input class="mono" type="text" id="recEan" placeholder="Scanner le code EAN">
+        <div style="display:flex; gap:10px; align-items:center;">
+          <input class="mono" type="text" id="recEan" placeholder="Scanner le code EAN" style="flex:1;">
+          <div class="cam-btn" id="btnCamScanRec" title="Scanner avec la caméra">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </div>
+        </div>
       </div>
 
       <h3 style="margin-top:26px;"><span class="step-num">2</span> Fiche référentiel (auto-remplie)</h3>
@@ -271,6 +292,18 @@
     <div><b id="toastTitle">Vente enregistrée</b><span id="toastSub"></span></div>
   </div>
 
+  <!-- Scan caméra -->
+  <div class="cam-modal-bg" id="camModal">
+    <div class="cam-modal">
+      <h3>Scanner un code-barres</h3>
+      <p>Présentez le code EAN ou l'étiquette IMEI devant la caméra.</p>
+      <div id="camReader"></div>
+      <div class="cam-status" id="camStatus">Initialisation de la caméra…</div>
+      <button class="cam-close" id="camClose">Fermer</button>
+    </div>
+  </div>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script src="js/db.js"></script>
 <script src="js/caisse.js"></script>
 </body>
