@@ -124,13 +124,20 @@ function init() {
   if (!localStorage.getItem(DB_KEYS.stock)) write(DB_KEYS.stock, seedStock());
   if (!localStorage.getItem(DB_KEYS.sales)) write(DB_KEYS.sales, seedSales());
   if (!localStorage.getItem(DB_KEYS.config)) {
-    write(DB_KEYS.config, { storeName: 'EURO STORE — Rue de la République' });
+    // fxRate: parité fixe EUR → XOF (Franc CFA BCEAO/BEAC), 1 € = 655,957 FCFA
+    write(DB_KEYS.config, { storeName: 'EURO STORE — Smartphone & accessoires', fxRate: 655.957, posLabel: 'Poste 01' });
   }
+  if (!localStorage.getItem(DB_KEYS.suspended)) write(DB_KEYS.suspended, []);
+  // Migration douce : complète une config déjà existante (versions précédentes) sans l'écraser.
+  const cfg = read(DB_KEYS.config, {});
+  let cfgChanged = false;
+  if (!cfg.fxRate) { cfg.fxRate = 655.957; cfgChanged = true; }
+  if (!cfg.posLabel) { cfg.posLabel = 'Poste 01'; cfgChanged = true; }
+  if (cfgChanged) write(DB_KEYS.config, cfg);
   if (!localStorage.getItem(DB_KEYS.users)) {
     write(DB_KEYS.users, SEED_USERS);
   }
   if (!localStorage.getItem(DB_KEYS.pending)) write(DB_KEYS.pending, []);
-  if (!localStorage.getItem(DB_KEYS.suspended)) write(DB_KEYS.suspended, []);
 }
 init();
 
@@ -240,48 +247,49 @@ const Store = {
     return sale;
   },
 
-  async sellCart(items, seller) {
-    const sales = [];
-    for (const it of items) {
-      sales.push(await Store.sellItem(it.imei, it.price, seller));
+  // Vend en une seule transaction tous les articles d'un panier (liste d'IMEI + prix finaux).
+  // Retourne { sales, failed } — failed liste les IMEI qui n'ont pas pu être vendus
+  // (ex. retirés du stock entre-temps) pour que l'UI puisse les signaler sans tout annuler.
+  async sellItems(cartItems, seller) {
+    const sales = []; const failed = [];
+    for (const c of cartItems) {
+      try { sales.push(await Store.sellItem(c.imei, c.price, seller)); }
+      catch (e) { failed.push({ imei: c.imei, error: e.message }); }
     }
-    return sales;
+    return { sales, failed };
   },
 
-  async suspendCart(items, seller) {
-    await delay();
+  getConfig() { return read(DB_KEYS.config, { fxRate: 655.957, storeName: 'EURO STORE', posLabel: 'Poste 01' }); },
+  setConfig(updates) { const cfg = { ...Store.getConfig(), ...updates }; write(DB_KEYS.config, cfg); return cfg; },
+
+  /* ------------------------ Ventes suspendues (mise en attente) ----------- */
+
+  async suspendSale(cartItems, seller) {
+    await delay(80);
     const suspended = read(DB_KEYS.suspended, []);
-    const ticket = {
-      id: 'H' + Date.now(),
-      items, seller: seller || 'Vendeur',
-      total: items.reduce((s, it) => s + Number(it.price), 0),
-      ts: new Date().toISOString()
-    };
-    suspended.unshift(ticket);
+    const rec = { id: 'H' + Date.now(), items: cartItems, seller: seller || 'Vendeur', createdAt: new Date().toISOString() };
+    suspended.unshift(rec);
     write(DB_KEYS.suspended, suspended);
-    return ticket;
+    return rec;
   },
 
-  async getSuspended() {
-    await delay(40);
+  async getSuspendedSales() {
+    await delay(60);
     return read(DB_KEYS.suspended, []);
   },
 
   async resumeSuspended(id) {
-    await delay(40);
+    await delay(60);
     const suspended = read(DB_KEYS.suspended, []);
-    const idx = suspended.findIndex(t => t.id === id);
-    if (idx === -1) throw new Error('Ticket introuvable.');
-    const [ticket] = suspended.splice(idx, 1);
-    write(DB_KEYS.suspended, suspended);
-    return ticket;
+    const rec = suspended.find(s => s.id === id);
+    if (!rec) throw new Error('Vente suspendue introuvable.');
+    write(DB_KEYS.suspended, suspended.filter(s => s.id !== id));
+    return rec;
   },
 
   async deleteSuspended(id) {
-    await delay(40);
-    let suspended = read(DB_KEYS.suspended, []);
-    suspended = suspended.filter(t => t.id !== id);
-    write(DB_KEYS.suspended, suspended);
+    await delay(60);
+    write(DB_KEYS.suspended, read(DB_KEYS.suspended, []).filter(s => s.id !== id));
   },
 
   async updateStockItem(imei, updates) {
