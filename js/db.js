@@ -16,7 +16,8 @@ const DB_KEYS = {
   session: 'es_session',
   config: 'es_config',
   pending: 'es_pending_sync',
-  users: 'es_users'
+  users: 'es_users',
+  suspended: 'es_suspended'
 };
 
 /* ---------------------------- Seed accounts -----------------------------
@@ -129,6 +130,7 @@ function init() {
     write(DB_KEYS.users, SEED_USERS);
   }
   if (!localStorage.getItem(DB_KEYS.pending)) write(DB_KEYS.pending, []);
+  if (!localStorage.getItem(DB_KEYS.suspended)) write(DB_KEYS.suspended, []);
 }
 init();
 
@@ -236,6 +238,50 @@ const Store = {
       write(DB_KEYS.pending, pending);
     }
     return sale;
+  },
+
+  async sellCart(items, seller) {
+    const sales = [];
+    for (const it of items) {
+      sales.push(await Store.sellItem(it.imei, it.price, seller));
+    }
+    return sales;
+  },
+
+  async suspendCart(items, seller) {
+    await delay();
+    const suspended = read(DB_KEYS.suspended, []);
+    const ticket = {
+      id: 'H' + Date.now(),
+      items, seller: seller || 'Vendeur',
+      total: items.reduce((s, it) => s + Number(it.price), 0),
+      ts: new Date().toISOString()
+    };
+    suspended.unshift(ticket);
+    write(DB_KEYS.suspended, suspended);
+    return ticket;
+  },
+
+  async getSuspended() {
+    await delay(40);
+    return read(DB_KEYS.suspended, []);
+  },
+
+  async resumeSuspended(id) {
+    await delay(40);
+    const suspended = read(DB_KEYS.suspended, []);
+    const idx = suspended.findIndex(t => t.id === id);
+    if (idx === -1) throw new Error('Ticket introuvable.');
+    const [ticket] = suspended.splice(idx, 1);
+    write(DB_KEYS.suspended, suspended);
+    return ticket;
+  },
+
+  async deleteSuspended(id) {
+    await delay(40);
+    let suspended = read(DB_KEYS.suspended, []);
+    suspended = suspended.filter(t => t.id !== id);
+    write(DB_KEYS.suspended, suspended);
   },
 
   async updateStockItem(imei, updates) {
