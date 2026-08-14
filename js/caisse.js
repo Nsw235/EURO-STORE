@@ -206,6 +206,73 @@
     }
   });
 
+  /* --------------------------- Scan par caméra ----------------------------- */
+
+  const camModal = document.getElementById('camModal');
+  const camStatus = document.getElementById('camStatus');
+  let html5QrCode = null;
+  let camTargetInput = null; // which input to fill once a code is decoded
+
+  async function openCameraScan(targetInput) {
+    camTargetInput = targetInput;
+    camModal.classList.add('show');
+    camStatus.classList.remove('err');
+    camStatus.textContent = 'Initialisation de la caméra…';
+
+    if (typeof Html5Qrcode === 'undefined') {
+      camStatus.classList.add('err');
+      camStatus.textContent = "Bibliothèque de scan indisponible (hors ligne ou bloquée). Utilisez la saisie manuelle.";
+      return;
+    }
+
+    try {
+      html5QrCode = new Html5Qrcode('camReader', {
+        formatsToSupport: [
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.EAN_8,
+          Html5QrcodeSupportedFormats.UPC_A,
+          Html5QrcodeSupportedFormats.CODE_128,
+          Html5QrcodeSupportedFormats.QR_CODE
+        ],
+        verbose: false
+      });
+      await html5QrCode.start(
+        { facingMode: 'environment' },
+        { fps: 12, qrbox: { width: 260, height: 160 } },
+        (decodedText) => onCameraDecode(decodedText),
+        () => {} // per-frame decode failures — ignored, expected while aiming
+      );
+      camStatus.textContent = 'Caméra active — visez le code-barres.';
+    } catch (err) {
+      camStatus.classList.add('err');
+      camStatus.textContent = "Impossible d'accéder à la caméra (permission refusée ou aucun périphérique). Utilisez la saisie manuelle.";
+    }
+  }
+
+  async function closeCameraScan() {
+    camModal.classList.remove('show');
+    if (html5QrCode) {
+      try { await html5QrCode.stop(); html5QrCode.clear(); } catch (e) {}
+      html5QrCode = null;
+    }
+  }
+
+  async function onCameraDecode(code) {
+    if (!camTargetInput) return;
+    camStatus.textContent = 'Code détecté : ' + code;
+    camTargetInput.value = code;
+    await closeCameraScan();
+    if (camTargetInput === scanInput) {
+      handleScan();
+    } else if (camTargetInput === recEan) {
+      lookupEan();
+    }
+  }
+
+  document.getElementById('btnCamScan').addEventListener('click', () => openCameraScan(scanInput));
+  document.getElementById('btnCamScanRec').addEventListener('click', () => openCameraScan(recEan));
+  document.getElementById('camClose').addEventListener('click', closeCameraScan);
+
   // Register service worker
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 })();

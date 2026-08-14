@@ -42,7 +42,7 @@ import {
   query, where, orderBy, limit, serverTimestamp, Timestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import {
-  signInAnonymously, signInWithEmailAndPassword, onAuthStateChanged
+  signInWithEmailAndPassword, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 export function buildFirebaseStore(db) {
@@ -118,15 +118,16 @@ export function buildFirebaseStore(db) {
 
 export function buildFirebaseAuth(auth, db) {
   return {
-    async loginVendeur(name) {
-      const cred = await signInAnonymously(auth);
-      return { role: 'vendeur', name: name || 'Vendeur', uid: cred.user.uid };
-    },
-    async loginAdmin(email, password) {
+    // Unified login mirroring js/db.js Auth.login(email, password): the
+    // caller never picks a role — it's resolved from the account itself.
+    // Store role/name on a Firestore 'users/{uid}' doc (or a custom claim)
+    // at account-creation time, e.g. { role: 'admin'|'vendeur', name }.
+    async login(email, password) {
       const cred = await signInWithEmailAndPassword(auth, email, password);
-      // Recommended: check a custom claim or a Firestore 'admins/{uid}' doc
-      // to confirm this account is authorized as admin before proceeding.
-      return { role: 'admin', name: cred.user.email, uid: cred.user.uid };
+      const userDoc = await getDoc(doc(db, 'users', cred.user.uid));
+      if (!userDoc.exists()) throw new Error('Compte non configuré.');
+      const { role, name } = userDoc.data();
+      return { role, name, email: cred.user.email, uid: cred.user.uid };
     },
     onChange(cb) { return onAuthStateChanged(auth, cb); }
   };

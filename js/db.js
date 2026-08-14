@@ -15,8 +15,22 @@ const DB_KEYS = {
   sales: 'es_sales',
   session: 'es_session',
   config: 'es_config',
-  pending: 'es_pending_sync'
+  pending: 'es_pending_sync',
+  users: 'es_users'
 };
+
+/* ---------------------------- Seed accounts -----------------------------
+   Login is unified (email + mot de passe) for every profile. The role
+   (admin / vendeur) is resolved silently from the matched account — it is
+   never chosen or displayed on the login screen. Adapt/replace this list
+   with real accounts (or a Firebase Auth + Firestore "users" collection —
+   see js/firebase-adapter.example.js) before going to production.
+   ------------------------------------------------------------------------ */
+const SEED_USERS = [
+  { email: 'camille@eurostore.fr', password: 'admin123', role: 'admin', name: 'Camille L.' },
+  { email: 'sofia@eurostore.fr', password: 'vendeur123', role: 'vendeur', name: 'Sofia M.' },
+  { email: 'yanis@eurostore.fr', password: 'vendeur123', role: 'vendeur', name: 'Yanis B.' }
+];
 
 /* ---------------------------- Seed data -------------------------------- */
 
@@ -109,7 +123,10 @@ function init() {
   if (!localStorage.getItem(DB_KEYS.stock)) write(DB_KEYS.stock, seedStock());
   if (!localStorage.getItem(DB_KEYS.sales)) write(DB_KEYS.sales, seedSales());
   if (!localStorage.getItem(DB_KEYS.config)) {
-    write(DB_KEYS.config, { adminPassword: 'admin123', storeName: 'EURO STORE — Rue de la République' });
+    write(DB_KEYS.config, { storeName: 'EURO STORE — Rue de la République' });
+  }
+  if (!localStorage.getItem(DB_KEYS.users)) {
+    write(DB_KEYS.users, SEED_USERS);
   }
   if (!localStorage.getItem(DB_KEYS.pending)) write(DB_KEYS.pending, []);
 }
@@ -120,21 +137,17 @@ const delay = (ms = 120) => new Promise(r => setTimeout(r, ms));
 /* ------------------------------ Auth ------------------------------------ */
 
 const Auth = {
-  async loginVendeur(name) {
-    const session = { role: 'vendeur', name: name || 'Vendeur', ts: Date.now() };
-    write(DB_KEYS.session, session);
+  // Unified login: the caller never picks a role. The account matched by
+  // email silently carries its own role (admin / vendeur), and the app
+  // routes accordingly — nothing on screen ever says "Administrateur".
+  async login(email, password) {
     await delay();
-    return session;
-  },
-  async loginAdmin(password) {
-    const cfg = read(DB_KEYS.config, {});
-    if (password !== cfg.adminPassword) {
-      await delay();
-      throw new Error('Mot de passe incorrect.');
-    }
-    const session = { role: 'admin', name: 'Camille L.', ts: Date.now() };
+    const clean = (email || '').trim().toLowerCase();
+    const users = read(DB_KEYS.users, SEED_USERS);
+    const user = users.find(u => u.email.toLowerCase() === clean && u.password === password);
+    if (!user) throw new Error('E-mail ou mot de passe incorrect.');
+    const session = { role: user.role, name: user.name, email: user.email, ts: Date.now() };
     write(DB_KEYS.session, session);
-    await delay();
     return session;
   },
   getSession() { return read(DB_KEYS.session, null); },

@@ -4,6 +4,7 @@
   if (!session) return;
 
   document.getElementById('adminName').textContent = session.name;
+  document.getElementById('adminEmail').textContent = session.email || '';
   document.getElementById('adminAvatar').textContent = session.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   document.getElementById('logoutBtn').addEventListener('click', () => {
     if (confirm('Se déconnecter ?')) { Auth.logout(); window.location.href = 'index.html'; }
