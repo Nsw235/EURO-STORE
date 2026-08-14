@@ -1,0 +1,14 @@
+{
+  "name": "EURO STORE — La qualité européenne à votre portée",
+  "short_name": "EURO STORE",
+  "description": "Caisse boutique et pilotage à distance pour EURO STORE.",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#14171D",
+  "theme_color": "#14171D",
+  "orientation": "any",
+  "icons": [
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

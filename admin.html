@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EURO STORE — Administrateur</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#F5F6F4">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5F6F4; --surface:#FFFFFF; --line:#E4E6E1; --ink:#14171D; --muted:#6B7280; --muted-2:#9AA0AC;
+    --signal:#00B383; --signal-dim:#E4F8F1; --amber:#E8830A; --amber-dim:#FDF0E1;
+    --danger:#D8394C; --danger-dim:#FBE7E9; --radius:18px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--bg); color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .display{font-family:'Space Grotesk',sans-serif;}
+
+  .shell{display:flex; min-height:100vh;}
+
+  .sidebar{width:230px; flex-shrink:0; background:var(--surface); border-right:1px solid var(--line); padding:24px 18px; display:flex; flex-direction:column; gap:28px;}
+  .brand{display:flex; align-items:center; gap:11px; padding:0 6px;}
+  .signal-mark{display:flex; align-items:flex-end; gap:3px; height:20px;}
+  .signal-mark span{width:4px; background:var(--signal); border-radius:2px; display:block;}
+  .signal-mark span:nth-child(1){height:35%;} .signal-mark span:nth-child(2){height:60%;}
+  .signal-mark span:nth-child(3){height:82%;} .signal-mark span:nth-child(4){height:100%;}
+  .brand b{font-family:'Space Grotesk'; font-weight:700; font-size:16px;}
+  .brand small{display:block; color:var(--muted-2); font-size:11px;}
+
+  nav{display:flex; flex-direction:column; gap:3px;}
+  .nav-item{display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:10px; font-size:13.5px; font-weight:500; color:var(--muted); cursor:pointer;}
+  .nav-item svg{width:17px; height:17px;}
+  .nav-item.active{background:var(--signal-dim); color:var(--signal); font-weight:600;}
+
+  .sidebar-foot{margin-top:auto; display:flex; align-items:center; gap:10px; padding:12px; border-radius:12px; background:var(--bg); border:1px solid var(--line); cursor:pointer;}
+  .avatar{width:32px; height:32px; border-radius:9px; background:var(--ink); color:#fff; display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk'; font-weight:600; font-size:12px; flex-shrink:0;}
+  .sidebar-foot .name{font-size:12.5px; font-weight:600;}
+  .sidebar-foot .role{font-size:11px; color:var(--muted-2);}
+
+  main{flex:1; padding:28px 34px 40px; overflow-x:hidden; overflow-y:auto; max-height:100vh;}
+  .topbar{display:flex; align-items:center; justify-content:space-between; margin-bottom:26px;}
+  .topbar h1{font-family:'Space Grotesk'; font-size:23px; font-weight:700;}
+  .topbar p{color:var(--muted); font-size:13px; margin-top:3px;}
+  .range-select{display:flex; gap:4px; background:var(--surface); border:1px solid var(--line); padding:4px; border-radius:11px;}
+  .range-opt{padding:8px 16px; border-radius:8px; font-size:12.5px; font-weight:600; color:var(--muted); cursor:pointer;}
+  .range-opt.active{background:var(--ink); color:#fff;}
+
+  .kpi-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:22px;}
+  .kpi{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:20px 22px;}
+  .kpi-label{font-size:12px; color:var(--muted); display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
+  .trend{font-size:11px; font-weight:700; padding:2px 8px; border-radius:100px;}
+  .trend.up{color:var(--signal); background:var(--signal-dim);}
+  .trend.down{color:var(--danger); background:var(--danger-dim);}
+  .kpi-value{font-family:'JetBrains Mono'; font-weight:700; font-size:27px;}
+  .kpi-sub{font-size:11.5px; color:var(--muted-2); margin-top:6px;}
+
+  .row2{display:grid; grid-template-columns:1.5fr 1fr; gap:16px; margin-bottom:16px;}
+  .panel{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:22px;}
+  .panel-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;}
+  .panel-head h3{font-family:'Space Grotesk'; font-size:15px; font-weight:600;}
+  .panel-head span{font-size:12px; color:var(--muted-2);}
+
+  .bars{display:flex; align-items:flex-end; gap:10px; height:150px; padding-top:10px;}
+  .bar-col{flex:1; display:flex; flex-direction:column; align-items:center; gap:8px;}
+  .bar{width:100%; background:var(--signal-dim); border-radius:7px 7px 3px 3px; position:relative; overflow:hidden;}
+  .bar i{position:absolute; bottom:0; left:0; right:0; background:var(--signal); border-radius:7px 7px 3px 3px;}
+  .bar-col .lbl{font-size:10.5px; color:var(--muted-2);}
+
+  .stock-list{display:flex; flex-direction:column; gap:14px;}
+  .stock-row{display:flex; align-items:center; gap:12px;}
+  .stock-row .name{flex:1; font-size:13px; font-weight:500;}
+  .stock-row .count{font-family:'JetBrains Mono'; font-size:12.5px; color:var(--muted); width:26px; text-align:right;}
+  .stock-meter{width:70px; display:flex; gap:3px; align-items:flex-end; height:16px;}
+  .stock-meter span{flex:1; border-radius:2px; background:var(--line);}
+  .stock-meter span.on{background:var(--signal);}
+  .stock-meter.low span.on{background:var(--amber);}
+
+  .alert-box{display:flex; gap:10px; align-items:flex-start; background:var(--amber-dim); border:1px solid #F3D6AC; border-radius:13px; padding:13px 15px; margin-top:16px;}
+  .alert-box svg{width:17px; height:17px; color:var(--amber); flex-shrink:0; margin-top:1px;}
+  .alert-box b{font-size:12.5px; display:block; margin-bottom:2px;}
+  .alert-box p{font-size:12px; color:var(--muted);}
+
+  .panel.table-panel{padding:0; overflow:hidden;}
+  .table-panel .panel-head{padding:22px 22px 16px;}
+  table{width:100%; border-collapse:collapse;}
+  thead th{text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.4px; color:var(--muted-2); padding:10px 22px; border-top:1px solid var(--line); border-bottom:1px solid var(--line); font-weight:600;}
+  tbody td{padding:13px 22px; font-size:13.5px; border-bottom:1px solid var(--line);}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:#FAFAF9;}
+  .prod-cell{display:flex; align-items:center; gap:10px;}
+  .prod-thumb{width:30px; height:30px; border-radius:8px; background:var(--bg); border:1px solid var(--line); display:flex; align-items:center; justify-content:center;}
+  .prod-thumb svg{width:14px; height:14px; color:var(--muted-2);}
+  .imei-cell{font-family:'JetBrains Mono'; font-size:12px; color:var(--muted);}
+  .price-cell{font-family:'JetBrains Mono'; font-weight:700; text-align:right;}
+  .row-actions{display:flex; gap:8px; justify-content:flex-end;}
+  .icon-btn{width:28px; height:28px; border-radius:8px; border:1px solid var(--line); background:var(--surface); display:flex; align-items:center; justify-content:center; cursor:pointer;}
+  .icon-btn svg{width:13px; height:13px; color:var(--muted);}
+  .icon-btn.danger svg{color:var(--danger);}
+
+  .page{display:none;}
+  .page.active{display:block;}
+
+  /* Stock management page */
+  .toolbar{display:flex; gap:10px; margin-bottom:16px;}
+  .toolbar input{flex:1; background:var(--surface); border:1px solid var(--line); border-radius:11px; padding:11px 14px; font-size:13.5px; outline:none;}
+  .toolbar input:focus{border-color:var(--signal);}
+  .status-pill{padding:3px 10px; border-radius:100px; font-size:11px; font-weight:600;}
+  .status-pill.in{background:var(--signal-dim); color:var(--signal);}
+  .status-pill.sold{background:var(--line); color:var(--muted);}
+
+  .modal-bg{display:none; position:fixed; inset:0; background:rgba(20,23,29,.45); align-items:center; justify-content:center; z-index:100;}
+  .modal-bg.show{display:flex;}
+  .modal{background:var(--surface); border-radius:16px; padding:24px; width:340px; box-shadow:0 30px 60px -20px rgba(0,0,0,.35);}
+  .modal h3{font-family:'Space Grotesk'; font-size:16px; margin-bottom:16px;}
+  .modal .field{margin-bottom:12px;}
+  .modal .field label{display:block; font-size:11.5px; color:var(--muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:.4px;}
+  .modal .field input{width:100%; background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-size:13.5px; outline:none;}
+  .modal-actions{display:flex; gap:10px; margin-top:16px;}
+  .modal-actions button{flex:1; padding:11px; border-radius:10px; border:none; font-weight:600; font-size:13px; cursor:pointer;}
+  .btn-primary{background:var(--ink); color:#fff;}
+  .btn-cancel{background:var(--bg); color:var(--ink); border:1px solid var(--line) !important;}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="signal-mark"><span></span><span></span><span></span><span></span></div>
+      <div><b>EURO STORE</b><small>Back-office</small></div>
+    </div>
+
+    <nav>
+      <div class="nav-item active" data-page="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+        Tableau de bord
+      </div>
+      <div class="nav-item" data-page="stock">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        Gestion du stock
+      </div>
+      <div class="nav-item" data-page="ventes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        Ventes
+      </div>
+      <div class="nav-item" data-page="rapports">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Rapports
+      </div>
+      <div class="nav-item" data-page="parametres">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9c.33-.62.27-1.36-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06c.46.46 1.2.52 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09c0 .67.39 1.28 1 1.51.62.19 1.36.13 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06c-.46.46-.52 1.2-.33 1.82V9c.23.61.84 1 1.51 1H21a2 2 0 0 1 0 4h-.09c-.67 0-1.28.39-1.51 1z"/></svg>
+        Paramètres
+      </div>
+    </nav>
+
+    <div class="sidebar-foot" id="logoutBtn" title="Déconnexion">
+      <div class="avatar" id="adminAvatar">CL</div>
+      <div>
+        <div class="name" id="adminName">Camille L.</div>
+        <div class="role">Administrateur</div>
+      </div>
+    </div>
+  </aside>
+
+  <main>
+    <!-- ===== PAGE DASHBOARD ===== -->
+    <div class="page active" id="page-dashboard">
+      <div class="topbar">
+        <div>
+          <h1>Tableau de bord</h1>
+          <p>Vue d'ensemble — <span id="storeNameLabel">EURO STORE</span></p>
+        </div>
+        <div class="range-select" id="rangeSelect">
+          <div class="range-opt" data-range="day">Jour</div>
+          <div class="range-opt" data-range="week">Semaine</div>
+          <div class="range-opt active" data-range="month">Mois</div>
+        </div>
+      </div>
+
+      <div class="kpi-grid" id="kpiGrid">
+        <div class="kpi">
+          <div class="kpi-label">Chiffre d'affaires <span class="trend up" id="trendCa">—</span></div>
+          <div class="kpi-value mono" id="kpiCa">— €</div>
+          <div class="kpi-sub" id="subCa">&nbsp;</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Volume de ventes <span class="trend up" id="trendVol">—</span></div>
+          <div class="kpi-value mono" id="kpiVol">—</div>
+          <div class="kpi-sub">appareils vendus</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Marge brute estimée</div>
+          <div class="kpi-value mono" id="kpiMarge">— €</div>
+          <div class="kpi-sub" id="subMarge">&nbsp;</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Panier moyen</div>
+          <div class="kpi-value mono" id="kpiPanier">— €</div>
+          <div class="kpi-sub">prix de vente moyen</div>
+        </div>
+      </div>
+
+      <div class="row2">
+        <div class="panel">
+          <div class="panel-head"><h3>Ventes — 7 derniers jours</h3><span id="barsTotal">— unités</span></div>
+          <div class="bars" id="bars"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h3>Stock par marque</h3><span id="stockTotal">— unités</span></div>
+          <div class="stock-list" id="stockList"></div>
+          <div class="alert-box" id="lowStockAlert" style="display:none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <div><b id="lowStockTitle">Stock bas</b><p id="lowStockDesc"></p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel table-panel">
+        <div class="panel-head"><h3>Historique des ventes</h3><span>Récentes</span></div>
+        <table>
+          <thead><tr><th>Heure</th><th>Produit</th><th>IMEI</th><th style="text-align:right">Prix TTC</th><th></th></tr></thead>
+          <tbody id="salesTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== PAGE STOCK ===== -->
+    <div class="page" id="page-stock">
+      <div class="topbar">
+        <div><h1>Gestion du stock</h1><p>Modifier, supprimer ou ajouter des unités en boutique</p></div>
+      </div>
+      <div class="toolbar">
+        <input type="text" id="stockSearch" placeholder="Rechercher par modèle, marque ou IMEI…">
+      </div>
+      <div class="panel table-panel">
+        <table>
+          <thead><tr><th>Produit</th><th>IMEI</th><th>État</th><th style="text-align:right">Prix TTC</th><th></th></tr></thead>
+          <tbody id="stockTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== PAGE VENTES ===== -->
+    <div class="page" id="page-ventes">
+      <div class="topbar"><div><h1>Journal des ventes</h1><p>Historique complet, du plus récent au plus ancien</p></div></div>
+      <div class="panel table-panel">
+        <table>
+          <thead><tr><th>Date</th><th>Heure</th><th>Produit</th><th>IMEI</th><th style="text-align:right">Prix TTC</th></tr></thead>
+          <tbody id="allSalesBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== PAGE RAPPORTS ===== -->
+    <div class="page" id="page-rapports">
+      <div class="topbar"><div><h1>Rapports</h1><p>Synthèse par marque et par période</p></div></div>
+      <div class="row2">
+        <div class="panel">
+          <div class="panel-head"><h3>Ventes par marque (30 j)</h3></div>
+          <div class="stock-list" id="reportByBrand"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Résumé</h3></div>
+          <div class="stock-list" id="reportSummary"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE PARAMÈTRES ===== -->
+    <div class="page" id="page-parametres">
+      <div class="topbar"><div><h1>Paramètres</h1><p>Configuration de la boutique</p></div></div>
+      <div class="panel" style="max-width:420px;">
+        <div class="field" style="margin-bottom:14px;">
+          <label style="display:block; font-size:11.5px; color:var(--muted); margin-bottom:6px; text-transform:uppercase;">Nom de la boutique</label>
+          <input type="text" id="storeNameInput" style="width:100%; background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-size:13.5px;">
+        </div>
+        <button class="btn-primary" id="saveSettings" style="padding:11px 18px; border-radius:10px; border:none; font-weight:600; cursor:pointer;">Enregistrer</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Modal édition stock -->
+<div class="modal-bg" id="editModal">
+  <div class="modal">
+    <h3>Modifier l'article</h3>
+    <div class="field"><label>Prix TTC (€)</label><input type="number" id="editPrice"></div>
+    <div class="field"><label>État</label><input type="text" id="editState"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="cancelEdit">Annuler</button>
+      <button class="btn-primary" id="confirmEdit">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/db.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

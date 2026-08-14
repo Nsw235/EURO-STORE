@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>EURO STORE — Caisse</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#14171D">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14171D;
+    --surface:#1E222B;
+    --surface-2:#262B36;
+    --line:#323847;
+    --ink:#F2F3F5;
+    --muted:#8A93A6;
+    --signal:#00E6A8;
+    --signal-deep:#00B383;
+    --signal-dim:rgba(0,230,168,.14);
+    --amber:#FF9B45;
+    --amber-dim:rgba(255,155,69,.14);
+    --danger:#FF5C6C;
+    --danger-dim:rgba(255,92,108,.14);
+    --radius:20px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg); color:var(--ink); font-family:'Inter',sans-serif;
+    height:100vh; overflow:hidden; display:flex; flex-direction:column;
+  }
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .display{font-family:'Space Grotesk',sans-serif;}
+
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 28px; border-bottom:1px solid var(--line); flex-shrink:0;
+  }
+  .brand{display:flex; align-items:center; gap:12px;}
+  .signal-mark{display:flex; align-items:flex-end; gap:3px; height:22px;}
+  .signal-mark span{width:5px; background:var(--signal); border-radius:2px; display:block;}
+  .signal-mark span:nth-child(1){height:35%;} .signal-mark span:nth-child(2){height:60%;}
+  .signal-mark span:nth-child(3){height:82%;} .signal-mark span:nth-child(4){height:100%;}
+  .brand-name{font-family:'Space Grotesk'; font-weight:700; font-size:18px; letter-spacing:.2px;}
+  .brand-sub{color:var(--muted); font-size:12px; margin-top:1px;}
+
+  .tabs{display:flex; gap:4px; background:var(--surface); padding:4px; border-radius:12px; border:1px solid var(--line);}
+  .tab{padding:9px 20px; border-radius:9px; font-size:13.5px; font-weight:600; color:var(--muted); cursor:pointer; transition:.15s; user-select:none;}
+  .tab.active{background:var(--signal-dim); color:var(--signal);}
+
+  .status{display:flex; align-items:center; gap:18px;}
+  .status .clock{font-family:'JetBrains Mono'; font-size:13px; color:var(--muted);}
+  .dot-ok{display:flex; align-items:center; gap:7px; font-size:12.5px; color:var(--muted); cursor:default;}
+  .dot-ok i{width:7px; height:7px; border-radius:50%; background:var(--signal); box-shadow:0 0 8px var(--signal); display:inline-block;}
+  .dot-ok.offline i{background:var(--danger); box-shadow:0 0 8px var(--danger);}
+  .avatar{width:34px; height:34px; border-radius:10px; background:var(--surface-2); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk'; font-weight:600; font-size:13px; cursor:pointer;}
+
+  .view{flex:1; display:none; min-height:0;}
+  .view.active{display:flex;}
+
+  #caisse{padding:22px 28px 26px; gap:22px;}
+
+  .left-panel{flex:1.35; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:34px; display:flex; flex-direction:column; position:relative; overflow:hidden;}
+  .empty-state{margin:auto; text-align:center; color:var(--muted);}
+  .empty-state .signal-mark{margin:0 auto 18px; height:34px; opacity:.35;}
+  .empty-state .signal-mark span{width:8px;}
+  .empty-state h2{font-family:'Space Grotesk'; font-weight:600; font-size:19px; color:var(--ink); margin-bottom:6px;}
+  .empty-state p{font-size:13.5px; max-width:280px; margin:0 auto;}
+
+  .product-card{display:none; height:100%; flex-direction:column;}
+  .product-card.show{display:flex;}
+  .pc-top{display:flex; gap:26px; flex:1;}
+  .pc-visual{width:190px; height:230px; border-radius:16px; background:linear-gradient(160deg,#2A303C,#1A1E27); border:1px solid var(--line); flex-shrink:0; display:flex; align-items:center; justify-content:center;}
+  .pc-visual svg{width:64px; height:64px; opacity:.55;}
+  .pc-info{display:flex; flex-direction:column; justify-content:center; gap:14px;}
+  .pc-badges{display:flex; gap:8px; flex-wrap:wrap;}
+  .badge{padding:5px 12px; border-radius:100px; font-size:11.5px; font-weight:600; letter-spacing:.3px;}
+  .badge-new{background:var(--signal-dim); color:var(--signal);}
+  .badge-refurb{background:var(--amber-dim); color:var(--amber);}
+  .badge-neutral{background:var(--surface-2); color:var(--muted); border:1px solid var(--line);}
+  .pc-title{font-family:'Space Grotesk'; font-weight:700; font-size:32px; line-height:1.1;}
+  .pc-title span{color:var(--muted); font-weight:500; font-size:20px;}
+  .pc-imei{color:var(--muted); font-size:13px;}
+  .pc-imei b{color:var(--ink); font-weight:600;}
+
+  .pc-price-row{display:flex; align-items:flex-end; justify-content:space-between; border-top:1px solid var(--line); padding-top:22px; margin-top:22px;}
+  .price-label{color:var(--muted); font-size:12.5px; text-transform:uppercase; letter-spacing:.6px; margin-bottom:6px;}
+  .price-value{font-family:'JetBrains Mono'; font-weight:700; font-size:56px; line-height:1; color:var(--signal); background:none; border:none; outline:none; width:100%;}
+  .price-value sup{font-size:22px; margin-left:4px; color:var(--muted); font-weight:600;}
+  .stock-mini{display:flex; align-items:center; gap:8px; color:var(--muted); font-size:12.5px;}
+
+  .right-panel{flex:1; display:flex; flex-direction:column; gap:14px;}
+  .scan-box{background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:16px 18px; display:flex; align-items:center; gap:12px;}
+  .scan-box svg{width:20px; height:20px; color:var(--muted); flex-shrink:0;}
+  .scan-box input{flex:1; background:transparent; border:none; outline:none; color:var(--ink); font-family:'JetBrains Mono'; font-size:16px;}
+  .scan-box input::placeholder{color:var(--muted); font-family:'Inter';}
+  .kbd{font-family:'JetBrains Mono'; font-size:11px; color:var(--muted); background:var(--surface-2); padding:3px 7px; border-radius:6px; border:1px solid var(--line);}
+  .scan-hint{font-size:11.5px; color:var(--muted); padding:0 4px;}
+  .scan-error{display:none; align-items:center; gap:8px; background:var(--danger-dim); color:var(--danger); border-radius:12px; padding:12px 16px; font-size:13px;}
+  .scan-error.show{display:flex;}
+
+  .btn-vendre{flex:1; background:linear-gradient(180deg,var(--signal),var(--signal-deep)); border:none; border-radius:20px; color:#0A1410; font-family:'Space Grotesk'; font-weight:700; font-size:30px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; cursor:pointer; transition:transform .12s ease, filter .12s ease; box-shadow:0 18px 40px -14px rgba(0,230,168,.55);}
+  .btn-vendre:active{transform:scale(.98); filter:brightness(.95);}
+  .btn-vendre svg{width:44px; height:44px;}
+  .btn-vendre small{font-family:'Inter'; font-weight:500; font-size:13px; opacity:.75; letter-spacing:.2px;}
+  .btn-vendre[disabled]{background:var(--surface-2); color:var(--muted); box-shadow:none; cursor:not-allowed;}
+
+  .secondary-row{display:flex; gap:10px;}
+  .btn-sec{flex:1; background:var(--surface); border:1px solid var(--line); border-radius:14px; color:var(--ink); font-size:13.5px; font-weight:600; padding:13px; cursor:pointer;}
+  .btn-sec.danger{color:var(--danger);}
+
+  .toast{position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(140%); background:var(--surface); border:1px solid var(--signal); border-radius:14px; padding:14px 22px; display:flex; align-items:center; gap:12px; transition:transform .3s cubic-bezier(.34,1.56,.64,1); box-shadow:0 20px 40px -10px rgba(0,0,0,.5); z-index:50;}
+  .toast.show{transform:translateX(-50%) translateY(0);}
+  .toast svg{width:20px; height:20px; color:var(--signal);}
+  .toast b{font-weight:600;}
+  .toast span{color:var(--muted); font-size:13px; margin-left:4px;}
+  .toast.offline-toast{border-color:var(--amber);}
+  .toast.offline-toast svg{color:var(--amber);}
+
+  #reception{padding:22px 28px 26px; gap:22px;}
+  .rec-col{flex:1; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:30px; overflow-y:auto;}
+  .rec-col h3{font-family:'Space Grotesk'; font-size:16px; margin-bottom:18px; display:flex; align-items:center; gap:8px;}
+  .step-num{width:22px; height:22px; border-radius:7px; background:var(--signal-dim); color:var(--signal); font-family:'JetBrains Mono'; font-size:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+
+  .field{margin-bottom:16px;}
+  .field label{display:block; font-size:12px; color:var(--muted); margin-bottom:7px; text-transform:uppercase; letter-spacing:.5px;}
+  .field input, .field select{width:100%; background:var(--surface-2); border:1px solid var(--line); border-radius:11px; padding:12px 14px; color:var(--ink); font-family:'Inter'; font-size:14.5px; outline:none;}
+  .field input.mono{font-family:'JetBrains Mono';}
+  .field-row{display:flex; gap:12px;}
+  .field-row .field{flex:1;}
+  .chip-group{display:flex; gap:8px;}
+  .chip-opt{flex:1; text-align:center; padding:11px; border-radius:11px; border:1px solid var(--line); background:var(--surface-2); font-size:13px; font-weight:600; color:var(--muted); cursor:pointer;}
+  .chip-opt.selected{border-color:var(--signal); color:var(--signal); background:var(--signal-dim);}
+
+  .rec-preview{width:340px; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:28px; flex-shrink:0; display:flex; flex-direction:column; align-items:center; text-align:center; gap:16px;}
+  .rec-preview .ean{font-family:'JetBrains Mono'; font-size:12px; color:var(--muted);}
+  .btn-add{width:100%; background:linear-gradient(180deg,var(--signal),var(--signal-deep)); border:none; border-radius:14px; color:#0A1410; font-family:'Space Grotesk'; font-weight:700; font-size:14.5px; padding:14px; cursor:pointer;}
+  .btn-add[disabled]{background:var(--surface-2); color:var(--muted); cursor:not-allowed;}
+  .rec-error{display:none; align-items:center; gap:8px; background:var(--danger-dim); color:var(--danger); border-radius:10px; padding:10px 13px; font-size:12.5px; width:100%;}
+  .rec-error.show{display:flex;}
+</style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="signal-mark"><span></span><span></span><span></span><span></span></div>
+      <div>
+        <div class="brand-name">EURO STORE</div>
+        <div class="brand-sub">Poste caisse · Comptoir</div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="caisse">Caisse</div>
+      <div class="tab" data-tab="reception">Réception stock</div>
+    </div>
+
+    <div class="status">
+      <div class="dot-ok" id="netDot"><i></i><span>Connecté</span></div>
+      <div class="clock" id="clock">14:32:07</div>
+      <div class="avatar" id="avatar" title="Déconnexion">SM</div>
+    </div>
+  </header>
+
+  <!-- ===== VUE CAISSE ===== -->
+  <div class="view active" id="caisse">
+    <div class="left-panel">
+      <div class="empty-state" id="emptyState">
+        <div class="signal-mark"><span></span><span></span><span></span><span></span></div>
+        <h2>En attente de scan</h2>
+        <p>Scannez le code EAN ou l'IMEI d'un produit pour afficher sa fiche de vente.</p>
+      </div>
+
+      <div class="product-card" id="productCard">
+        <div class="pc-top">
+          <div class="pc-visual">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="6" y="2" width="12" height="20" rx="2.5"/><line x1="10" y1="19" x2="14" y2="19"/></svg>
+          </div>
+          <div class="pc-info">
+            <div class="pc-badges" id="pcBadges"></div>
+            <div class="pc-title" id="pcTitle">— <span id="pcBrand"></span></div>
+            <div class="pc-imei">IMEI <b class="mono" id="pcImei">—</b></div>
+          </div>
+        </div>
+        <div class="pc-price-row">
+          <div>
+            <div class="price-label">Prix de vente TTC</div>
+            <div class="price-value mono" id="pcPrice" contenteditable="true">0<sup>€00</sup></div>
+          </div>
+          <div class="stock-mini">
+            <div class="signal-mark" style="height:14px;"><span></span><span></span><span></span><span></span></div>
+            <span id="pcStockNote">En stock</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="right-panel">
+      <div class="scan-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7V4h3M17 4h3v3M20 17v3h-3M7 20H4v-3"/><line x1="4" y1="12" x2="20" y2="12"/></svg>
+        <input type="text" id="scanInput" placeholder="Scanner EAN ou IMEI…" autofocus>
+        <span class="kbd">Entrée</span>
+      </div>
+      <div class="scan-error" id="scanError"><span>⚠</span><span></span></div>
+      <div class="scan-hint" id="scanHint">Astuce : essayez 352094088729145 (iPhone 15 Pro) ou 8806094567001 (Galaxy S24).</div>
+
+      <button class="btn-vendre" id="btnVendre" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="4 12 9 17 20 6"/></svg>
+        VENDRE
+        <small id="vendreSub">Scannez un article pour continuer</small>
+      </button>
+
+      <div class="secondary-row">
+        <button class="btn-sec" id="btnEditPrice">Modifier le prix</button>
+        <button class="btn-sec danger" id="btnCancel">Annuler</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== VUE RÉCEPTION ===== -->
+  <div class="view" id="reception">
+    <div class="rec-col">
+      <h3><span class="step-num">1</span> Scan de la boîte produit</h3>
+      <div class="field">
+        <label>Code EAN</label>
+        <input class="mono" type="text" id="recEan" placeholder="Scanner le code EAN">
+      </div>
+
+      <h3 style="margin-top:26px;"><span class="step-num">2</span> Fiche référentiel (auto-remplie)</h3>
+      <div class="field-row">
+        <div class="field"><label>Marque</label><input id="recBrand" value="—" disabled></div>
+        <div class="field"><label>Modèle</label><input id="recModel" value="—" disabled></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Capacité</label><input id="recStorage" value="—" disabled></div>
+        <div class="field"><label>Couleur</label><input id="recColor" value="—" disabled></div>
+      </div>
+
+      <h3 style="margin-top:26px;"><span class="step-num">3</span> Informations boutique</h3>
+      <div class="field-row">
+        <div class="field"><label>Prix de vente TTC</label><input class="mono" id="recPrice" placeholder="€" type="number"></div>
+        <div class="field"><label>IMEI</label><input class="mono" id="recImei" placeholder="Scanner ou saisir"></div>
+      </div>
+      <div class="field">
+        <label>État</label>
+        <div class="chip-group" id="recState">
+          <div class="chip-opt selected" data-state="Neuf">Neuf</div>
+          <div class="chip-opt" data-state="Reconditionné">Reconditionné</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rec-preview">
+      <div class="pc-visual">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="6" y="2" width="12" height="20" rx="2.5"/><line x1="10" y1="19" x2="14" y2="19"/></svg>
+      </div>
+      <div>
+        <div class="pc-title" style="font-size:19px;" id="prevTitle">—</div>
+        <div class="pc-imei" style="margin-top:6px;" id="prevSub">—</div>
+      </div>
+      <div class="ean" id="prevEan">EAN —</div>
+      <div class="rec-error" id="recError"><span>⚠</span><span></span></div>
+      <button class="btn-add" id="btnAddStock" disabled>Ajouter au stock</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="4 12 9 17 20 6"/></svg>
+    <div><b id="toastTitle">Vente enregistrée</b><span id="toastSub"></span></div>
+  </div>
+
+<script src="js/db.js"></script>
+<script src="js/caisse.js"></script>
+</body>
+</html>
