@@ -5,100 +5,262 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>EURO STORE — Caisse</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#14171D">
+<meta name="theme-color" content="#0E1116">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#14171D;
+    --sidebar:#0E1116;
     --surface:#1E222B;
     --surface-2:#262B36;
-    --line:#323847;
+    --line:#2b3040;
     --ink:#F2F3F5;
     --muted:#8A93A6;
-    --signal:#00E6A8;
-    --signal-deep:#00B383;
-    --signal-dim:rgba(0,230,168,.14);
+    --signal:#22c55e;
+    --signal-deep:#16a34a;
+    --signal-dim:rgba(34,197,94,.14);
+    --gold:#C9944F;
+    --gold-dim:rgba(201,148,79,.16);
     --amber:#FF9B45;
     --amber-dim:rgba(255,155,69,.14);
-    --danger:#FF5C6C;
-    --danger-dim:rgba(255,92,108,.14);
-    --radius:20px;
+    --danger:#ef4444;
+    --danger-dim:rgba(239,68,68,.14);
+    --radius:18px;
   }
   *{box-sizing:border-box; margin:0; padding:0;}
   body{
     background:var(--bg); color:var(--ink); font-family:'Inter',sans-serif;
-    height:100vh; overflow:hidden; display:flex; flex-direction:column;
+    height:100vh; overflow:hidden;
   }
   .mono{font-family:'JetBrains Mono',monospace;}
   .display{font-family:'Space Grotesk',sans-serif;}
+  ::-webkit-scrollbar{width:8px; height:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--surface-2); border-radius:8px;}
+  ::-webkit-scrollbar-track{background:transparent;}
 
-  header{
-    display:flex; align-items:center; justify-content:space-between;
-    padding:16px 28px; border-bottom:1px solid var(--line); flex-shrink:0;
+  /* ============================== SHELL / SIDEBAR ============================== */
+  .shell{display:flex; height:100vh;}
+
+  .sidebar{
+    width:220px; flex-shrink:0; background:var(--sidebar); border-right:1px solid var(--line);
+    display:flex; flex-direction:column; padding:20px 14px;
   }
-  .brand{display:flex; align-items:center; gap:12px;}
-  .signal-mark{display:flex; align-items:flex-end; gap:3px; height:22px;}
-  .signal-mark span{width:5px; background:var(--signal); border-radius:2px; display:block;}
-  .signal-mark span:nth-child(1){height:35%;} .signal-mark span:nth-child(2){height:60%;}
-  .signal-mark span:nth-child(3){height:82%;} .signal-mark span:nth-child(4){height:100%;}
-  .brand-name{font-family:'Space Grotesk'; font-weight:700; font-size:18px; letter-spacing:.2px;}
-  .brand-sub{color:var(--muted); font-size:12px; margin-top:1px;}
+  .side-brand{padding:6px 8px 18px; border-bottom:1px solid var(--line); margin-bottom:14px;}
+  .side-brand img{width:100%; max-width:150px; display:block; filter:drop-shadow(0 4px 10px rgba(0,0,0,.35));}
+  .side-brand .tagline{font-size:11px; color:var(--muted); margin-top:8px; letter-spacing:.2px;}
+  .side-brand .pos-label{font-size:11px; color:var(--gold); margin-top:4px; font-weight:600; letter-spacing:.3px; display:flex; align-items:center; gap:6px;}
+  .side-brand .pos-label i{width:6px; height:6px; border-radius:50%; background:var(--gold); display:inline-block; box-shadow:0 0 6px var(--gold);}
 
-  .tabs{display:flex; gap:4px; background:var(--surface); padding:4px; border-radius:12px; border:1px solid var(--line);}
-  .tab{padding:9px 20px; border-radius:9px; font-size:13.5px; font-weight:600; color:var(--muted); cursor:pointer; transition:.15s; user-select:none;}
-  .tab.active{background:var(--signal-dim); color:var(--signal);}
+  nav.side-nav{display:flex; flex-direction:column; gap:3px; margin-top:6px;}
+  .nav-item{
+    display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:10px;
+    font-size:13.5px; font-weight:500; color:var(--muted); cursor:pointer; position:relative;
+    border-left:3px solid transparent; transition:.15s;
+  }
+  .nav-item svg{width:17px; height:17px; flex-shrink:0;}
+  .nav-item:hover{color:var(--ink); background:var(--surface);}
+  .nav-item.active{background:var(--gold-dim); color:var(--gold); font-weight:600; border-left-color:var(--gold);}
+  .nav-badge{margin-left:auto; background:var(--amber-dim); color:var(--amber); font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:100px; font-family:'JetBrains Mono';}
 
-  .status{display:flex; align-items:center; gap:18px;}
-  .status .clock{font-family:'JetBrains Mono'; font-size:13px; color:var(--muted);}
-  .dot-ok{display:flex; align-items:center; gap:7px; font-size:12.5px; color:var(--muted); cursor:default;}
+  .sidebar-foot{margin-top:auto; padding-top:14px; border-top:1px solid var(--line);}
+  .status-row{display:flex; align-items:center; justify-content:space-between; padding:0 8px 12px;}
+  .dot-ok{display:flex; align-items:center; gap:7px; font-size:11.5px; color:var(--muted);}
   .dot-ok i{width:7px; height:7px; border-radius:50%; background:var(--signal); box-shadow:0 0 8px var(--signal); display:inline-block;}
   .dot-ok.offline i{background:var(--danger); box-shadow:0 0 8px var(--danger);}
-  .avatar{width:34px; height:34px; border-radius:10px; background:var(--surface-2); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk'; font-weight:600; font-size:13px; cursor:pointer;}
+  .clock{font-family:'JetBrains Mono'; font-size:11px; color:var(--muted);}
+  .user-card{display:flex; align-items:center; gap:10px; padding:9px; border-radius:12px; background:var(--surface); border:1px solid var(--line); cursor:pointer;}
+  .avatar{width:32px; height:32px; border-radius:9px; background:var(--gold-dim); color:var(--gold); display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk'; font-weight:700; font-size:12px; flex-shrink:0;}
+  .user-card .name{font-size:12.5px; font-weight:600;}
+  .user-card .role{font-size:10.5px; color:var(--muted);}
+  .user-card svg{width:15px; height:15px; margin-left:auto; color:var(--muted);}
 
-  .view{flex:1; display:none; min-height:0;}
-  .view.active{display:flex;}
+  /* ============================== MAIN / PAGES ============================== */
+  main{flex:1; min-width:0; height:100vh; overflow:hidden; display:flex; flex-direction:column;}
+  .page{flex:1; display:none; min-height:0; overflow-y:auto;}
+  .page.active{display:flex; flex-direction:column;}
 
-  #caisse{padding:22px 28px 26px; gap:22px;}
+  .page-head{padding:22px 28px 0; flex-shrink:0;}
+  .page-head h1{font-family:'Space Grotesk'; font-size:21px; font-weight:700;}
+  .page-head p{color:var(--muted); font-size:13px; margin-top:3px;}
 
-  .left-panel{flex:1.35; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:34px; display:flex; flex-direction:column; position:relative; overflow:hidden;}
-  .empty-state{margin:auto; text-align:center; color:var(--muted);}
-  .empty-state .signal-mark{margin:0 auto 18px; height:34px; opacity:.35;}
-  .empty-state .signal-mark span{width:8px;}
-  .empty-state h2{font-family:'Space Grotesk'; font-weight:600; font-size:19px; color:var(--ink); margin-bottom:6px;}
-  .empty-state p{font-size:13.5px; max-width:280px; margin:0 auto;}
+  /* ---------- POS (Tableau de bord / Caisse) ---------- */
+  #page-pos{flex-direction:row; padding:22px 28px 26px; gap:20px; overflow:hidden;}
 
-  .product-card{display:none; height:100%; flex-direction:column;}
-  .product-card.show{display:flex;}
-  .pc-top{display:flex; gap:26px; flex:1;}
-  .pc-visual{width:190px; height:230px; border-radius:16px; background:linear-gradient(160deg,#2A303C,#1A1E27); border:1px solid var(--line); flex-shrink:0; display:flex; align-items:center; justify-content:center;}
-  .pc-visual svg{width:64px; height:64px; opacity:.55;}
-  .pc-info{display:flex; flex-direction:column; justify-content:center; gap:14px;}
-  .pc-badges{display:flex; gap:8px; flex-wrap:wrap;}
-  .badge{padding:5px 12px; border-radius:100px; font-size:11.5px; font-weight:600; letter-spacing:.3px;}
-  .badge-new{background:var(--signal-dim); color:var(--signal);}
-  .badge-refurb{background:var(--amber-dim); color:var(--amber);}
-  .badge-neutral{background:var(--surface-2); color:var(--muted); border:1px solid var(--line);}
-  .pc-title{font-family:'Space Grotesk'; font-weight:700; font-size:32px; line-height:1.1;}
-  .pc-title span{color:var(--muted); font-weight:500; font-size:20px;}
-  .pc-imei{color:var(--muted); font-size:13px;}
-  .pc-imei b{color:var(--ink); font-weight:600;}
-
-  .pc-price-row{display:flex; align-items:flex-end; justify-content:space-between; border-top:1px solid var(--line); padding-top:22px; margin-top:22px;}
-  .price-label{color:var(--muted); font-size:12.5px; text-transform:uppercase; letter-spacing:.6px; margin-bottom:6px;}
-  .price-value{font-family:'JetBrains Mono'; font-weight:700; font-size:56px; line-height:1; color:var(--signal); background:none; border:none; outline:none; width:100%;}
-  .price-value sup{font-size:22px; margin-left:4px; color:var(--muted); font-weight:600;}
-  .stock-mini{display:flex; align-items:center; gap:8px; color:var(--muted); font-size:12.5px;}
-
-  .right-panel{flex:1; display:flex; flex-direction:column; gap:14px;}
-  .scan-box{background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:16px 18px; display:flex; align-items:center; gap:12px;}
+  .left-panel{flex:1.35; display:flex; flex-direction:column; gap:16px; min-height:0;}
+  .scan-box{background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:16px 18px; display:flex; align-items:center; gap:12px; flex-shrink:0;}
   .scan-box svg{width:20px; height:20px; color:var(--muted); flex-shrink:0;}
   .scan-box input{flex:1; background:transparent; border:none; outline:none; color:var(--ink); font-family:'JetBrains Mono'; font-size:16px;}
   .scan-box input::placeholder{color:var(--muted); font-family:'Inter';}
   .kbd{font-family:'JetBrains Mono'; font-size:11px; color:var(--muted); background:var(--surface-2); padding:3px 7px; border-radius:6px; border:1px solid var(--line);}
   .cam-btn{width:34px; height:34px; border-radius:9px; background:var(--surface-2); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; transition:.15s;}
-  .cam-btn:hover{border-color:var(--signal);}
+  .cam-btn:hover{border-color:var(--gold);}
   .cam-btn svg{width:16px; height:16px; color:var(--muted);}
+
+  .scan-error{display:none; align-items:center; gap:8px; background:var(--danger-dim); color:var(--danger); border-radius:12px; padding:11px 16px; font-size:13px; flex-shrink:0;}
+  .scan-error.show{display:flex;}
+  .scan-hint{font-size:11.5px; color:var(--muted); padding:0 4px; flex-shrink:0;}
+
+  .scan-visual{
+    flex:1; min-height:0; background:var(--surface); border:1px dashed var(--line); border-radius:var(--radius);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:20px;
+    position:relative; overflow:hidden;
+  }
+  .scan-visual.has-card{border-style:solid; align-items:stretch; justify-content:flex-start; padding:0;}
+  .scan-visual.has-card > .viseur, .scan-visual.has-card > h2, .scan-visual.has-card > p{display:none;}
+  .viseur{width:120px; height:120px; border:2px solid var(--surface-2); border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:18px; position:relative;}
+  .viseur::before, .viseur::after{content:''; position:absolute; background:var(--gold); opacity:.55;}
+  .viseur::before{width:2px; height:16px; top:-2px;}
+  .viseur::after{width:16px; height:2px; left:-2px;}
+  .viseur i{width:10px; height:10px; border-radius:50%; background:var(--gold); box-shadow:0 0 14px var(--gold);}
+  .scan-visual h2{font-family:'Space Grotesk'; font-weight:600; font-size:18px; margin-bottom:6px;}
+  .scan-visual p{font-size:13px; color:var(--muted); max-width:280px;}
+
+  .product-card{display:none; flex-direction:column; height:100%; padding:30px;}
+  .product-card.show{display:flex;}
+  .pc-top{display:flex; gap:24px; flex:1; min-height:0;}
+  .pc-visual{width:150px; height:190px; border-radius:16px; background:linear-gradient(160deg,#2A303C,#1A1E27); border:1px solid var(--line); flex-shrink:0; display:flex; align-items:center; justify-content:center;}
+  .pc-visual svg{width:52px; height:52px; opacity:.55;}
+  .pc-info{display:flex; flex-direction:column; justify-content:center; gap:12px; min-width:0;}
+  .pc-badges{display:flex; gap:8px; flex-wrap:wrap;}
+  .badge{padding:5px 12px; border-radius:100px; font-size:11.5px; font-weight:600; letter-spacing:.3px; white-space:nowrap;}
+  .badge-new{background:var(--signal-dim); color:var(--signal);}
+  .badge-refurb{background:var(--amber-dim); color:var(--amber);}
+  .badge-neutral{background:var(--surface-2); color:var(--muted); border:1px solid var(--line);}
+  .pc-title{font-family:'Space Grotesk'; font-weight:700; font-size:26px; line-height:1.15;}
+  .pc-title span{color:var(--muted); font-weight:500; font-size:16px; display:block;}
+  .pc-imei{color:var(--muted); font-size:12.5px;}
+  .pc-imei b{color:var(--ink); font-weight:600;}
+
+  .pc-price-row{border-top:1px solid var(--line); padding-top:18px; margin-top:18px; flex-shrink:0;}
+  .price-label{color:var(--muted); font-size:11.5px; text-transform:uppercase; letter-spacing:.6px; margin-bottom:4px;}
+  .price-xof{font-family:'JetBrains Mono'; font-weight:700; font-size:38px; line-height:1.05; color:var(--gold);}
+  .price-eur-row{display:flex; align-items:center; gap:14px; margin-top:10px;}
+  .price-eur{font-family:'JetBrains Mono'; font-weight:600; font-size:18px; color:var(--ink); background:none; border:none; outline:none; border-bottom:1px dashed var(--line); min-width:60px;}
+  .stock-mini{margin-left:auto; display:flex; align-items:center; gap:7px; color:var(--muted); font-size:12px;}
+  .stock-mini i{width:6px; height:6px; border-radius:50%; background:var(--signal); display:inline-block;}
+
+  .btn-vendre{
+    flex-shrink:0; background:linear-gradient(180deg,var(--signal),var(--signal-deep)); border:none; border-radius:18px;
+    color:#06210f; font-family:'Space Grotesk'; font-weight:700; font-size:22px; padding:20px;
+    display:flex; align-items:center; justify-content:center; gap:12px; cursor:pointer;
+    transition:transform .12s ease, filter .12s ease; box-shadow:0 16px 34px -14px rgba(34,197,94,.5);
+  }
+  .btn-vendre:active{transform:scale(.99); filter:brightness(.96);}
+  .btn-vendre svg{width:26px; height:26px;}
+  .btn-vendre small{font-family:'Inter'; font-weight:500; font-size:12.5px; opacity:.8; letter-spacing:.2px; display:block;}
+  .btn-vendre[disabled]{background:var(--surface-2); color:var(--muted); box-shadow:none; cursor:not-allowed;}
+
+  /* ---------- Panier / Ticket (colonne droite) ---------- */
+  .right-panel{width:320px; flex-shrink:0; display:flex; flex-direction:column; gap:14px; min-height:0;}
+  .pos-status{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:12px 16px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0;}
+  .pos-status .agent{font-size:11.5px; color:var(--muted);}
+  .pos-status .agent b{color:var(--ink);}
+
+  .cart-panel{flex:1; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); display:flex; flex-direction:column; min-height:0; overflow:hidden;}
+  .cart-head{display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid var(--line); flex-shrink:0;}
+  .cart-head h3{font-family:'Space Grotesk'; font-size:14px; font-weight:600;}
+  .cart-head .clear-icon{width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--muted); transition:.15s;}
+  .cart-head .clear-icon:hover{background:var(--danger-dim); color:var(--danger);}
+  .cart-head .clear-icon svg{width:15px; height:15px;}
+
+  .cart-list{flex:1; overflow-y:auto; padding:8px 10px;}
+  .cart-empty{margin:auto; text-align:center; color:var(--muted); font-size:12.5px; padding:30px 20px;}
+  .cart-row{display:flex; align-items:center; gap:10px; padding:10px 8px; border-radius:11px; cursor:pointer; transition:.12s;}
+  .cart-row:hover{background:var(--surface-2);}
+  .cart-row.selected{background:var(--gold-dim);}
+  .cart-row .ct-dot{width:8px; height:8px; border-radius:50%; background:var(--surface-2); border:1px solid var(--line); flex-shrink:0;}
+  .cart-row.selected .ct-dot{background:var(--gold); border-color:var(--gold);}
+  .cart-row .ct-info{flex:1; min-width:0;}
+  .cart-row .ct-name{font-size:12.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .cart-row .ct-sub{font-size:11px; color:var(--muted); margin-top:1px;}
+  .cart-row .ct-price{text-align:right; flex-shrink:0;}
+  .cart-row .ct-price .xof{font-family:'JetBrains Mono'; font-size:12px; font-weight:600; color:var(--gold);}
+  .cart-row .ct-price .eur{font-size:10.5px; color:var(--muted);}
+  .cart-row .ct-remove{width:22px; height:22px; border-radius:6px; display:flex; align-items:center; justify-content:center; color:var(--muted); flex-shrink:0;}
+  .cart-row .ct-remove:hover{color:var(--danger); background:var(--danger-dim);}
+  .cart-row .ct-remove svg{width:12px; height:12px;}
+
+  .cart-total{border-top:1px solid var(--line); padding:14px 18px; flex-shrink:0;}
+  .cart-total-row{display:flex; align-items:baseline; justify-content:space-between;}
+  .cart-total-row .lbl{font-size:12px; color:var(--muted);}
+  .cart-total-row .val-xof{font-family:'JetBrains Mono'; font-weight:700; font-size:19px; color:var(--gold);}
+  .cart-total-row .val-eur{font-family:'JetBrains Mono'; font-size:12px; color:var(--muted); margin-top:2px; text-align:right;}
+
+  .secondary-row{display:flex; gap:10px; flex-shrink:0;}
+  .btn-sec{flex:1; background:var(--surface); border:1px solid var(--line); border-radius:14px; color:var(--ink); font-size:12.5px; font-weight:600; padding:12px; cursor:pointer; transition:.15s;}
+  .btn-sec:hover{border-color:var(--muted);}
+  .btn-sec.danger{color:var(--danger);}
+  .btn-sec.danger:hover{border-color:var(--danger); background:var(--danger-dim);}
+
+  .suspended-strip{flex-shrink:0; background:var(--amber-dim); border:1px solid rgba(255,155,69,.3); border-radius:12px; padding:10px 14px; display:none; align-items:center; gap:10px; cursor:pointer; font-size:12px; color:var(--amber);}
+  .suspended-strip.show{display:flex;}
+  .suspended-strip svg{width:15px; height:15px; flex-shrink:0;}
+  .suspended-strip b{font-family:'JetBrains Mono';}
+
+  /* ---------- Ventes / Inventaire (tables) ---------- */
+  .table-wrap{margin:18px 28px 26px; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; flex-shrink:0;}
+  .table-toolbar{display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--line);}
+  .table-toolbar input{background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:9px 13px; color:var(--ink); font-size:13px; outline:none; width:240px;}
+  .table-toolbar input:focus{border-color:var(--gold);}
+  table{width:100%; border-collapse:collapse;}
+  thead th{text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); padding:10px 18px; border-bottom:1px solid var(--line);}
+  tbody td{padding:13px 18px; border-bottom:1px solid var(--line); font-size:13px;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:var(--surface-2);}
+  .td-price{font-family:'JetBrains Mono'; text-align:right;}
+  .td-price .eur{color:var(--muted); font-size:11px; display:block;}
+  .td-imei{font-family:'JetBrains Mono'; color:var(--muted); font-size:12px;}
+  .pill{display:inline-block; padding:3px 10px; border-radius:100px; font-size:11px; font-weight:600;}
+  .pill.neuf{background:var(--signal-dim); color:var(--signal);}
+  .pill.recond{background:var(--amber-dim); color:var(--amber);}
+  .empty-row{text-align:center; color:var(--muted); padding:40px 18px; font-size:13px;}
+
+  /* ---------- Clients / Réglages ---------- */
+  .placeholder-block{margin:30px 28px; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:50px 40px; text-align:center; flex-shrink:0;}
+  .placeholder-block svg{width:38px; height:38px; color:var(--muted); margin-bottom:16px;}
+  .placeholder-block h2{font-family:'Space Grotesk'; font-size:17px; margin-bottom:8px;}
+  .placeholder-block p{color:var(--muted); font-size:13px; max-width:380px; margin:0 auto;}
+
+  .settings-grid{margin:18px 28px 26px; display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  .settings-card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:22px;}
+  .settings-card h3{font-family:'Space Grotesk'; font-size:14px; margin-bottom:16px;}
+  .field{margin-bottom:14px;}
+  .field:last-child{margin-bottom:0;}
+  .field label{display:block; font-size:11.5px; color:var(--muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:.5px;}
+  .field input{width:100%; background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:10px 13px; color:var(--ink); font-family:'Inter'; font-size:13.5px; outline:none;}
+  .field input:focus{border-color:var(--gold);}
+  .field input.mono{font-family:'JetBrains Mono';}
+  .field-hint{font-size:11px; color:var(--muted); margin-top:6px;}
+  .btn-save{margin-top:16px; background:var(--gold-dim); color:var(--gold); border:1px solid rgba(201,148,79,.3); border-radius:11px; padding:10px 18px; font-size:12.5px; font-weight:600; cursor:pointer;}
+
+  /* ---------- Réception (restylée dans le layout page) ---------- */
+  #page-reception{flex-direction:row; padding:22px 28px 26px; gap:20px; overflow:hidden;}
+  .rec-col{flex:1; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:28px; overflow-y:auto;}
+  .rec-col h3{font-family:'Space Grotesk'; font-size:15px; margin-bottom:16px; display:flex; align-items:center; gap:8px;}
+  .step-num{width:22px; height:22px; border-radius:7px; background:var(--gold-dim); color:var(--gold); font-family:'JetBrains Mono'; font-size:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .field-row{display:flex; gap:12px;}
+  .field-row .field{flex:1;}
+  .field select{width:100%; background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:10px 13px; color:var(--ink); font-family:'Inter'; font-size:13.5px; outline:none;}
+  .chip-group{display:flex; gap:8px;}
+  .chip-opt{flex:1; text-align:center; padding:11px; border-radius:11px; border:1px solid var(--line); background:var(--surface-2); font-size:13px; font-weight:600; color:var(--muted); cursor:pointer;}
+  .chip-opt.selected{border-color:var(--gold); color:var(--gold); background:var(--gold-dim);}
+
+  .rec-preview{width:300px; flex-shrink:0; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:26px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:14px;}
+  .rec-preview .ean{font-family:'JetBrains Mono'; font-size:12px; color:var(--muted);}
+  .btn-add{width:100%; background:linear-gradient(180deg,var(--signal),var(--signal-deep)); border:none; border-radius:14px; color:#06210f; font-family:'Space Grotesk'; font-weight:700; font-size:14px; padding:13px; cursor:pointer;}
+  .btn-add[disabled]{background:var(--surface-2); color:var(--muted); cursor:not-allowed;}
+  .rec-error{display:none; align-items:center; gap:8px; background:var(--danger-dim); color:var(--danger); border-radius:10px; padding:10px 13px; font-size:12.5px; width:100%;}
+  .rec-error.show{display:flex;}
+
+  /* ---------- Toast / Modal caméra (inchangés) ---------- */
+  .toast{position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(140%); background:var(--surface); border:1px solid var(--signal); border-radius:14px; padding:14px 22px; display:flex; align-items:center; gap:12px; transition:transform .3s cubic-bezier(.34,1.56,.64,1); box-shadow:0 20px 40px -10px rgba(0,0,0,.5); z-index:50;}
+  .toast.show{transform:translateX(-50%) translateY(0);}
+  .toast svg{width:20px; height:20px; color:var(--signal);}
+  .toast b{font-weight:600;}
+  .toast span{color:var(--muted); font-size:13px; margin-left:4px;}
+  .toast.offline-toast{border-color:var(--amber);}
+  .toast.offline-toast svg{color:var(--amber);}
 
   .cam-modal-bg{display:none; position:fixed; inset:0; background:rgba(10,12,16,.72); align-items:center; justify-content:center; z-index:200;}
   .cam-modal-bg.show{display:flex;}
@@ -109,182 +271,302 @@
   .cam-status{margin-top:12px; font-size:12.5px; color:var(--muted); text-align:center;}
   .cam-status.err{color:var(--danger);}
   .cam-close{width:100%; margin-top:14px; background:var(--surface-2); border:1px solid var(--line); border-radius:12px; color:var(--ink); font-weight:600; font-size:13.5px; padding:12px; cursor:pointer;}
-  .scan-hint{font-size:11.5px; color:var(--muted); padding:0 4px;}
-  .scan-error{display:none; align-items:center; gap:8px; background:var(--danger-dim); color:var(--danger); border-radius:12px; padding:12px 16px; font-size:13px;}
-  .scan-error.show{display:flex;}
 
-  .btn-vendre{flex:1; background:linear-gradient(180deg,var(--signal),var(--signal-deep)); border:none; border-radius:20px; color:#0A1410; font-family:'Space Grotesk'; font-weight:700; font-size:30px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; cursor:pointer; transition:transform .12s ease, filter .12s ease; box-shadow:0 18px 40px -14px rgba(0,230,168,.55);}
-  .btn-vendre:active{transform:scale(.98); filter:brightness(.95);}
-  .btn-vendre svg{width:44px; height:44px;}
-  .btn-vendre small{font-family:'Inter'; font-weight:500; font-size:13px; opacity:.75; letter-spacing:.2px;}
-  .btn-vendre[disabled]{background:var(--surface-2); color:var(--muted); box-shadow:none; cursor:not-allowed;}
+  /* ---------- Suspendues modal ---------- */
+  .susp-modal-bg{display:none; position:fixed; inset:0; background:rgba(10,12,16,.72); align-items:center; justify-content:center; z-index:200;}
+  .susp-modal-bg.show{display:flex;}
+  .susp-modal{background:var(--surface); border:1px solid var(--line); border-radius:20px; padding:22px; width:420px; max-width:92vw; max-height:80vh; display:flex; flex-direction:column;}
+  .susp-modal h3{font-family:'Space Grotesk'; font-size:15px; margin-bottom:14px;}
+  .susp-list{overflow-y:auto; display:flex; flex-direction:column; gap:10px; margin-bottom:14px;}
+  .susp-item{border:1px solid var(--line); border-radius:12px; padding:12px 14px; display:flex; align-items:center; gap:12px;}
+  .susp-item .si-info{flex:1; font-size:12.5px;}
+  .susp-item .si-info b{display:block; font-size:13.5px; margin-bottom:2px;}
+  .susp-item .si-info span{color:var(--muted);}
+  .susp-item button{background:var(--gold-dim); color:var(--gold); border:1px solid rgba(201,148,79,.3); border-radius:9px; padding:7px 12px; font-size:11.5px; font-weight:600; cursor:pointer;}
+  .susp-empty{text-align:center; color:var(--muted); font-size:12.5px; padding:24px 10px;}
+  .susp-close{background:var(--surface-2); border:1px solid var(--line); border-radius:12px; color:var(--ink); font-weight:600; font-size:13.5px; padding:11px; cursor:pointer;}
 
-  .secondary-row{display:flex; gap:10px;}
-  .btn-sec{flex:1; background:var(--surface); border:1px solid var(--line); border-radius:14px; color:var(--ink); font-size:13.5px; font-weight:600; padding:13px; cursor:pointer;}
-  .btn-sec.danger{color:var(--danger);}
-
-  .toast{position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(140%); background:var(--surface); border:1px solid var(--signal); border-radius:14px; padding:14px 22px; display:flex; align-items:center; gap:12px; transition:transform .3s cubic-bezier(.34,1.56,.64,1); box-shadow:0 20px 40px -10px rgba(0,0,0,.5); z-index:50;}
-  .toast.show{transform:translateX(-50%) translateY(0);}
-  .toast svg{width:20px; height:20px; color:var(--signal);}
-  .toast b{font-weight:600;}
-  .toast span{color:var(--muted); font-size:13px; margin-left:4px;}
-  .toast.offline-toast{border-color:var(--amber);}
-  .toast.offline-toast svg{color:var(--amber);}
-
-  #reception{padding:22px 28px 26px; gap:22px;}
-  .rec-col{flex:1; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:30px; overflow-y:auto;}
-  .rec-col h3{font-family:'Space Grotesk'; font-size:16px; margin-bottom:18px; display:flex; align-items:center; gap:8px;}
-  .step-num{width:22px; height:22px; border-radius:7px; background:var(--signal-dim); color:var(--signal); font-family:'JetBrains Mono'; font-size:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
-
-  .field{margin-bottom:16px;}
-  .field label{display:block; font-size:12px; color:var(--muted); margin-bottom:7px; text-transform:uppercase; letter-spacing:.5px;}
-  .field input, .field select{width:100%; background:var(--surface-2); border:1px solid var(--line); border-radius:11px; padding:12px 14px; color:var(--ink); font-family:'Inter'; font-size:14.5px; outline:none;}
-  .field input.mono{font-family:'JetBrains Mono';}
-  .field-row{display:flex; gap:12px;}
-  .field-row .field{flex:1;}
-  .chip-group{display:flex; gap:8px;}
-  .chip-opt{flex:1; text-align:center; padding:11px; border-radius:11px; border:1px solid var(--line); background:var(--surface-2); font-size:13px; font-weight:600; color:var(--muted); cursor:pointer;}
-  .chip-opt.selected{border-color:var(--signal); color:var(--signal); background:var(--signal-dim);}
-
-  .rec-preview{width:340px; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:28px; flex-shrink:0; display:flex; flex-direction:column; align-items:center; text-align:center; gap:16px;}
-  .rec-preview .ean{font-family:'JetBrains Mono'; font-size:12px; color:var(--muted);}
-  .btn-add{width:100%; background:linear-gradient(180deg,var(--signal),var(--signal-deep)); border:none; border-radius:14px; color:#0A1410; font-family:'Space Grotesk'; font-weight:700; font-size:14.5px; padding:14px; cursor:pointer;}
-  .btn-add[disabled]{background:var(--surface-2); color:var(--muted); cursor:not-allowed;}
-  .rec-error{display:none; align-items:center; gap:8px; background:var(--danger-dim); color:var(--danger); border-radius:10px; padding:10px 13px; font-size:12.5px; width:100%;}
-  .rec-error.show{display:flex;}
+  /* ---------- Responsive : sidebar -> tab bar ---------- */
+  @media (max-width: 980px){
+    .shell{flex-direction:column; height:auto; min-height:100vh; overflow:auto;}
+    body{overflow:auto; height:auto;}
+    .sidebar{width:100%; flex-direction:row; align-items:center; padding:10px 14px; gap:14px; overflow-x:auto;}
+    .side-brand{border-bottom:none; padding:0; margin-bottom:0; flex-shrink:0;}
+    .side-brand img{max-width:100px;}
+    .side-brand .tagline, .side-brand .pos-label{display:none;}
+    nav.side-nav{flex-direction:row; margin-top:0; flex-shrink:0;}
+    .nav-item{border-left:none; border-bottom:3px solid transparent; padding:8px 10px;}
+    .nav-item.active{border-left-color:transparent; border-bottom-color:var(--gold);}
+    .nav-item span.nav-label{display:none;}
+    .sidebar-foot{margin-top:0; padding-top:0; border-top:none; margin-left:auto; flex-shrink:0;}
+    .status-row{display:none;}
+    main{height:auto;}
+    .page.active{display:flex;}
+    #page-pos, #page-reception{flex-direction:column; overflow:visible;}
+    .right-panel{width:100%;}
+  }
 </style>
 </head>
 <body>
 
-  <header>
-    <div class="brand">
-      <div class="signal-mark"><span></span><span></span><span></span><span></span></div>
-      <div>
-        <div class="brand-name">EURO STORE</div>
-        <div class="brand-sub">Caisse virtuelle</div>
+  <div class="shell">
+    <!-- ============================== SIDEBAR ============================== -->
+    <div class="sidebar">
+      <div class="side-brand">
+        <img src="assets/logo-header.png" alt="EURO STORE">
+        <div class="tagline">Smartphone &amp; accessoires</div>
+        <div class="pos-label"><i></i><span id="posLabel">Caisse — Poste 01</span></div>
+      </div>
+
+      <nav class="side-nav">
+        <div class="nav-item active" data-page="pos">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+          <span class="nav-label">Tableau de Bord</span>
+        </div>
+        <div class="nav-item" data-page="ventes">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3h18"/><path d="M4 3v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3"/><path d="M9 21V12h6v9"/></svg>
+          <span class="nav-label">Ventes</span>
+        </div>
+        <div class="nav-item" data-page="clients">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span class="nav-label">Clients</span>
+        </div>
+        <div class="nav-item" data-page="inventaire">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 8V21H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg>
+          <span class="nav-label">Inventaire</span>
+        </div>
+        <div class="nav-item" data-page="reception">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" y1="22" x2="12" y2="12"/></svg>
+          <span class="nav-label">Réception</span>
+        </div>
+        <div class="nav-item" data-page="reglages">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span class="nav-label">Réglages</span>
+        </div>
+      </nav>
+
+      <div class="sidebar-foot">
+        <div class="status-row">
+          <div class="dot-ok" id="netDot"><i></i><span>Connecté</span></div>
+          <div class="clock" id="clock">—</div>
+        </div>
+        <div class="user-card" id="avatar" title="Déconnexion">
+          <div class="avatar" id="avatarInit">SM</div>
+          <div>
+            <div class="name" id="userName">Vendeur</div>
+            <div class="role">Caissier</div>
+          </div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </div>
       </div>
     </div>
 
-    <div class="tabs">
-      <div class="tab active" data-tab="caisse">Caisse</div>
-      <div class="tab" data-tab="reception">Réception stock</div>
-    </div>
+    <!-- ============================== MAIN ============================== -->
+    <main>
 
-    <div class="status">
-      <div class="dot-ok" id="netDot"><i></i><span>Connecté</span></div>
-      <div class="clock" id="clock">14:32:07</div>
-      <div class="avatar" id="avatar" title="Déconnexion">SM</div>
-    </div>
-  </header>
+      <!-- ===== PAGE : TABLEAU DE BORD (Caisse / Scan) ===== -->
+      <div class="page active" id="page-pos">
+        <div class="left-panel">
+          <div class="scan-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7V4h3M17 4h3v3M20 17v3h-3M7 20H4v-3"/><line x1="4" y1="12" x2="20" y2="12"/></svg>
+            <input type="text" id="scanInput" placeholder="Scanner EAN ou IMEI…" autofocus>
+            <span class="kbd">Entrée</span>
+            <div class="cam-btn" id="btnCamScan" title="Scanner avec la caméra">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            </div>
+          </div>
+          <div class="scan-error" id="scanError"><span>⚠</span><span></span></div>
+          <div class="scan-hint" id="scanHint">Astuce : essayez 352094088729145 (iPhone 15 Pro) ou 8806094567001 (Galaxy S24), ou utilisez l'icône caméra.</div>
 
-  <!-- ===== VUE CAISSE ===== -->
-  <div class="view active" id="caisse">
-    <div class="left-panel">
-      <div class="empty-state" id="emptyState">
-        <div class="signal-mark"><span></span><span></span><span></span><span></span></div>
-        <h2>En attente de scan</h2>
-        <p>Scannez le code EAN ou l'IMEI d'un produit pour afficher sa fiche de vente.</p>
+          <div class="scan-visual" id="scanVisual">
+            <div class="viseur"><i></i></div>
+            <h2 id="emptyTitle">Zone de scan continu</h2>
+            <p>Déposez ou présentez le produit — chaque article scanné est ajouté au panier à droite.</p>
+
+            <div class="product-card" id="productCard">
+              <div class="pc-top">
+                <div class="pc-visual">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="6" y="2" width="12" height="20" rx="2.5"/><line x1="10" y1="19" x2="14" y2="19"/></svg>
+                </div>
+                <div class="pc-info">
+                  <div class="pc-badges" id="pcBadges"></div>
+                  <div class="pc-title" id="pcTitle">— <span id="pcBrand"></span></div>
+                  <div class="pc-imei">IMEI <b class="mono" id="pcImei">—</b></div>
+                </div>
+              </div>
+              <div class="pc-price-row">
+                <div class="price-label">Prix de vente TTC</div>
+                <div class="price-xof mono" id="pcPriceXof">0 FCFA</div>
+                <div class="price-eur-row">
+                  <input class="price-eur mono" id="pcPriceEur" type="number" step="0.01">
+                  <span style="color:var(--muted); font-size:12px;">€ · modifiable</span>
+                  <div class="stock-mini"><i></i><span id="pcStockNote">En stock</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn-vendre" id="btnVendre" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="4 12 9 17 20 6"/></svg>
+            <div><div>VENDRE</div><small id="vendreSub">Scannez un article pour continuer</small></div>
+          </button>
+        </div>
+
+        <div class="right-panel">
+          <div class="pos-status">
+            <div class="dot-ok" id="netDot2"><i></i><span>Connecté</span></div>
+            <div class="agent">Agent <b id="agentInit">SM</b> · <span id="clock2" class="mono">—</span></div>
+          </div>
+
+          <div class="suspended-strip" id="suspendedStrip">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span><b id="suspendedCount">0</b> vente(s) suspendue(s) — cliquez pour reprendre</span>
+          </div>
+
+          <div class="cart-panel">
+            <div class="cart-head">
+              <h3>Liste — panier en cours</h3>
+              <div class="clear-icon" id="btnClearCartIcon" title="Vider tout">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+              </div>
+            </div>
+            <div class="cart-list" id="cartList">
+              <div class="cart-empty" id="cartEmpty">Aucun article scanné pour l'instant.</div>
+            </div>
+            <div class="cart-total">
+              <div class="cart-total-row">
+                <span class="lbl">Total (<span id="cartCount">0</span> article(s))</span>
+                <span class="val-xof mono" id="cartTotalXof">0 FCFA</span>
+              </div>
+              <div class="val-eur mono" id="cartTotalEur">0,00 €</div>
+            </div>
+          </div>
+
+          <div class="secondary-row">
+            <button class="btn-sec" id="btnClearCart">Vider le panier</button>
+            <button class="btn-sec danger" id="btnSuspend">Suspendre la vente</button>
+          </div>
+        </div>
       </div>
 
-      <div class="product-card" id="productCard">
-        <div class="pc-top">
+      <!-- ===== PAGE : VENTES ===== -->
+      <div class="page" id="page-ventes">
+        <div class="page-head"><h1>Ventes</h1><p>Historique des transactions enregistrées à cette caisse.</p></div>
+        <div class="table-wrap">
+          <div class="table-toolbar">
+            <span style="font-size:12.5px; color:var(--muted);"><b class="mono" id="ventesCount" style="color:var(--ink);">0</b> vente(s)</span>
+            <input type="text" id="ventesSearch" placeholder="Rechercher un modèle, un IMEI…">
+          </div>
+          <table>
+            <thead><tr><th>Heure</th><th>Produit</th><th>IMEI</th><th style="text-align:right;">Prix</th></tr></thead>
+            <tbody id="ventesBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== PAGE : CLIENTS ===== -->
+      <div class="page" id="page-clients">
+        <div class="page-head"><h1>Clients</h1><p>Fiche client &amp; historique d'achats.</p></div>
+        <div class="placeholder-block">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <h2>Module clients — à venir</h2>
+          <p>La gestion des fiches clients (coordonnées, garanties, historique d'achats) n'est pas encore branchée sur cette caisse. Contactez le pilotage boutique pour la mise en service.</p>
+        </div>
+      </div>
+
+      <!-- ===== PAGE : INVENTAIRE ===== -->
+      <div class="page" id="page-inventaire">
+        <div class="page-head"><h1>Inventaire</h1><p>Articles actuellement en stock, consultation seule depuis la caisse.</p></div>
+        <div class="table-wrap">
+          <div class="table-toolbar">
+            <span style="font-size:12.5px; color:var(--muted);"><b class="mono" id="invCount" style="color:var(--ink);">0</b> article(s) en stock</span>
+            <input type="text" id="invSearch" placeholder="Rechercher un modèle, un IMEI…">
+          </div>
+          <table>
+            <thead><tr><th>Produit</th><th>IMEI</th><th>État</th><th style="text-align:right;">Prix</th></tr></thead>
+            <tbody id="invBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== PAGE : RÉCEPTION ===== -->
+      <div class="page" id="page-reception">
+        <div class="rec-col">
+          <h3><span class="step-num">1</span> Scan de la boîte produit</h3>
+          <div class="field">
+            <label>Code EAN</label>
+            <div style="display:flex; gap:10px; align-items:center;">
+              <input class="mono" type="text" id="recEan" placeholder="Scanner le code EAN" style="flex:1; background:var(--surface-2); border:1px solid var(--line); border-radius:11px; padding:12px 14px; color:var(--ink); outline:none;">
+              <div class="cam-btn" id="btnCamScanRec" title="Scanner avec la caméra">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <h3 style="margin-top:26px;"><span class="step-num">2</span> Fiche référentiel (auto-remplie)</h3>
+          <div class="field-row">
+            <div class="field"><label>Marque</label><input id="recBrand" value="—" disabled></div>
+            <div class="field"><label>Modèle</label><input id="recModel" value="—" disabled></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Capacité</label><input id="recStorage" value="—" disabled></div>
+            <div class="field"><label>Couleur</label><input id="recColor" value="—" disabled></div>
+          </div>
+
+          <h3 style="margin-top:26px;"><span class="step-num">3</span> Informations boutique</h3>
+          <div class="field-row">
+            <div class="field"><label>Prix de vente TTC (€)</label><input class="mono" id="recPrice" placeholder="€" type="number"></div>
+            <div class="field"><label>IMEI</label><input class="mono" id="recImei" placeholder="Scanner ou saisir"></div>
+          </div>
+          <div class="field">
+            <label>État</label>
+            <div class="chip-group" id="recState">
+              <div class="chip-opt selected" data-state="Neuf">Neuf</div>
+              <div class="chip-opt" data-state="Reconditionné">Reconditionné</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rec-preview">
           <div class="pc-visual">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="6" y="2" width="12" height="20" rx="2.5"/><line x1="10" y1="19" x2="14" y2="19"/></svg>
           </div>
-          <div class="pc-info">
-            <div class="pc-badges" id="pcBadges"></div>
-            <div class="pc-title" id="pcTitle">— <span id="pcBrand"></span></div>
-            <div class="pc-imei">IMEI <b class="mono" id="pcImei">—</b></div>
-          </div>
-        </div>
-        <div class="pc-price-row">
           <div>
-            <div class="price-label">Prix de vente TTC</div>
-            <div class="price-value mono" id="pcPrice" contenteditable="true">0<sup>€00</sup></div>
+            <div class="pc-title" style="font-size:18px;" id="prevTitle">—</div>
+            <div class="pc-imei" style="margin-top:6px;" id="prevSub">—</div>
           </div>
-          <div class="stock-mini">
-            <div class="signal-mark" style="height:14px;"><span></span><span></span><span></span><span></span></div>
-            <span id="pcStockNote">En stock</span>
-          </div>
+          <div class="ean" id="prevEan">EAN —</div>
+          <div class="rec-error" id="recError"><span>⚠</span><span></span></div>
+          <button class="btn-add" id="btnAddStock" disabled>Ajouter au stock</button>
         </div>
       </div>
-    </div>
 
-    <div class="right-panel">
-      <div class="scan-box">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7V4h3M17 4h3v3M20 17v3h-3M7 20H4v-3"/><line x1="4" y1="12" x2="20" y2="12"/></svg>
-        <input type="text" id="scanInput" placeholder="Scanner EAN ou IMEI…" autofocus>
-        <span class="kbd">Entrée</span>
-        <div class="cam-btn" id="btnCamScan" title="Scanner avec la caméra">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-        </div>
-      </div>
-      <div class="scan-error" id="scanError"><span>⚠</span><span></span></div>
-      <div class="scan-hint" id="scanHint">Astuce : essayez 352094088729145 (iPhone 15 Pro) ou 8806094567001 (Galaxy S24), ou utilisez l'icône caméra.</div>
-
-      <button class="btn-vendre" id="btnVendre" disabled>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="4 12 9 17 20 6"/></svg>
-        VENDRE
-        <small id="vendreSub">Scannez un article pour continuer</small>
-      </button>
-
-      <div class="secondary-row">
-        <button class="btn-sec" id="btnEditPrice">Modifier le prix</button>
-        <button class="btn-sec danger" id="btnCancel">Annuler</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===== VUE RÉCEPTION ===== -->
-  <div class="view" id="reception">
-    <div class="rec-col">
-      <h3><span class="step-num">1</span> Scan de la boîte produit</h3>
-      <div class="field">
-        <label>Code EAN</label>
-        <div style="display:flex; gap:10px; align-items:center;">
-          <input class="mono" type="text" id="recEan" placeholder="Scanner le code EAN" style="flex:1;">
-          <div class="cam-btn" id="btnCamScanRec" title="Scanner avec la caméra">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      <!-- ===== PAGE : RÉGLAGES ===== -->
+      <div class="page" id="page-reglages">
+        <div class="page-head"><h1>Réglages</h1><p>Paramètres de cette caisse et de la session en cours.</p></div>
+        <div class="settings-grid">
+          <div class="settings-card">
+            <h3>Boutique &amp; devise</h3>
+            <div class="field"><label>Nom de la boutique</label><input id="setStoreName" type="text"></div>
+            <div class="field"><label>Identifiant de poste</label><input id="setPosLabel" type="text"></div>
+            <div class="field">
+              <label>Taux de change EUR → FCFA</label>
+              <input class="mono" id="setFxRate" type="number" step="0.001">
+              <div class="field-hint">Parité fixe usuelle : 1 € = 655,957 FCFA (zone UEMOA/CEMAC).</div>
+            </div>
+            <button class="btn-save" id="btnSaveSettings">Enregistrer</button>
+          </div>
+          <div class="settings-card">
+            <h3>Session en cours</h3>
+            <div class="field"><label>Agent connecté</label><input id="setAgentName" type="text" disabled></div>
+            <div class="field"><label>Rôle</label><input value="Caissier" type="text" disabled></div>
+            <div class="field"><label>Poste</label><input value="Caisse virtuelle — navigateur" type="text" disabled></div>
+            <div class="field-hint" style="margin-top:8px;">Pour changer de compte, utilisez le bouton de déconnexion dans le menu latéral.</div>
           </div>
         </div>
       </div>
 
-      <h3 style="margin-top:26px;"><span class="step-num">2</span> Fiche référentiel (auto-remplie)</h3>
-      <div class="field-row">
-        <div class="field"><label>Marque</label><input id="recBrand" value="—" disabled></div>
-        <div class="field"><label>Modèle</label><input id="recModel" value="—" disabled></div>
-      </div>
-      <div class="field-row">
-        <div class="field"><label>Capacité</label><input id="recStorage" value="—" disabled></div>
-        <div class="field"><label>Couleur</label><input id="recColor" value="—" disabled></div>
-      </div>
-
-      <h3 style="margin-top:26px;"><span class="step-num">3</span> Informations boutique</h3>
-      <div class="field-row">
-        <div class="field"><label>Prix de vente TTC</label><input class="mono" id="recPrice" placeholder="€" type="number"></div>
-        <div class="field"><label>IMEI</label><input class="mono" id="recImei" placeholder="Scanner ou saisir"></div>
-      </div>
-      <div class="field">
-        <label>État</label>
-        <div class="chip-group" id="recState">
-          <div class="chip-opt selected" data-state="Neuf">Neuf</div>
-          <div class="chip-opt" data-state="Reconditionné">Reconditionné</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="rec-preview">
-      <div class="pc-visual">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="6" y="2" width="12" height="20" rx="2.5"/><line x1="10" y1="19" x2="14" y2="19"/></svg>
-      </div>
-      <div>
-        <div class="pc-title" style="font-size:19px;" id="prevTitle">—</div>
-        <div class="pc-imei" style="margin-top:6px;" id="prevSub">—</div>
-      </div>
-      <div class="ean" id="prevEan">EAN —</div>
-      <div class="rec-error" id="recError"><span>⚠</span><span></span></div>
-      <button class="btn-add" id="btnAddStock" disabled>Ajouter au stock</button>
-    </div>
+    </main>
   </div>
 
   <div class="toast" id="toast">
@@ -300,6 +582,15 @@
       <div id="camReader"></div>
       <div class="cam-status" id="camStatus">Initialisation de la caméra…</div>
       <button class="cam-close" id="camClose">Fermer</button>
+    </div>
+  </div>
+
+  <!-- Ventes suspendues -->
+  <div class="susp-modal-bg" id="suspModal">
+    <div class="susp-modal">
+      <h3>Ventes suspendues</h3>
+      <div class="susp-list" id="suspList"></div>
+      <button class="susp-close" id="suspClose">Fermer</button>
     </div>
   </div>
 

@@ -1,4 +1,4 @@
-const CACHE = 'euro-store-v1';
+const CACHE = 'euro-store-v2';
 const ASSETS = [
   './',
   'index.html',
@@ -7,7 +7,9 @@ const ASSETS = [
   'manifest.json',
   'js/db.js',
   'js/caisse.js',
-  'js/admin.js'
+  'js/admin.js',
+  'assets/logo-header.png',
+  'assets/logo-full.png'
 ];
 
 self.addEventListener('install', (event) => {

@@ -111,8 +111,27 @@ réécrit.
 
 ## Icônes PWA
 
-Ajoutez `assets/icon-192.png` et `assets/icon-512.png` (logo EURO STORE,
-fond `#14171D`) avant le déploiement final — le manifeste les référence déjà.
+`assets/icon-192.png` et `assets/icon-512.png` sont déjà fournis (générés à
+partir du logo EURO STORE sur fond `#14171D`) — le manifeste les référence.
+
+## Caisse — tableau de bord vendeur
+
+`caisse.html` a été refondu en interface à trois zones :
+
+- **Menu latéral** (`logo-header.png` + `logo-full.png` dans `assets/`) avec
+  navigation : Tableau de bord (scan/vente), Ventes, Clients *(à venir)*,
+  Inventaire, Réception, Réglages.
+- **Zone de scan continu** : chaque code EAN/IMEI scanné est ajouté au
+  **panier** (plusieurs articles par transaction) et affiché dans une fiche
+  produit avec prix éditable.
+- **Panier à droite** : liste des articles scannés, total en **FCFA**
+  (grand format, devise d'affichage principale) et en **€** (devise de
+  référence éditable), bouton *Vider le panier* et *Suspendre la vente*
+  (mise en attente, reprise possible depuis la puce orange en haut du
+  panier).
+
+Le taux de change EUR → FCFA (parité fixe zone UEMOA/CEMAC, 1 € = 655,957
+FCFA par défaut) se règle dans la page **Réglages** de la caisse.
 
 ## Sécurité — à faire avant une mise en production réelle
 
