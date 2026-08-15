@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>EURO STORE — Connexion</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#14171D">
+<meta name="theme-color" content="#0E1220">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#14171D; --surface:#1E222B; --surface-2:#262B36; --line:#323847;
-    --ink:#F2F3F5; --muted:#8A93A6; --signal:#00E6A8; --signal-deep:#00B383;
-    --signal-dim:rgba(0,230,168,.14); --danger:#FF5C6C; --danger-dim:rgba(255,92,108,.14);
+    --bg:#0E1220; --surface:#171C30; --surface-2:#1F2540; --line:#2E3556;
+    --ink:#F2F0EA; --muted:#9AA2B8; --signal:#C9A24B; --signal-deep:#9C7A32;
+    --signal-dim:rgba(201,162,75,.14); --danger:#FF5C6C; --danger-dim:rgba(255,92,108,.14);
     --radius:20px;
   }
   *{box-sizing:border-box; margin:0; padding:0;}
@@ -23,12 +23,8 @@
   }
   .mono{font-family:'JetBrains Mono',monospace;}
   .wrap{width:100%; max-width:400px;}
-  .brand{display:flex; flex-direction:column; align-items:center; gap:14px; margin-bottom:36px; text-align:center;}
-  .signal-mark{display:flex; align-items:flex-end; gap:4px; height:30px;}
-  .signal-mark span{width:7px; background:var(--signal); border-radius:2px; display:block;}
-  .signal-mark span:nth-child(1){height:35%;} .signal-mark span:nth-child(2){height:60%;}
-  .signal-mark span:nth-child(3){height:82%;} .signal-mark span:nth-child(4){height:100%;}
-  .brand-name{font-family:'Space Grotesk'; font-weight:700; font-size:26px; letter-spacing:.3px;}
+  .brand{display:flex; flex-direction:column; align-items:center; gap:10px; margin-bottom:36px; text-align:center;}
+  .brand-logo{width:220px; height:auto; display:block;}
   .brand-slogan{color:var(--muted); font-size:13px; letter-spacing:.2px;}
 
   .card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:28px 26px 26px;}
@@ -51,7 +47,7 @@
 
   .btn-go{
     width:100%; background:linear-gradient(180deg,var(--signal),var(--signal-deep));
-    border:none; border-radius:14px; color:#0A1410; font-family:'Space Grotesk'; font-weight:700;
+    border:none; border-radius:14px; color:#241C08; font-family:'Space Grotesk'; font-weight:700;
     font-size:15px; padding:15px; cursor:pointer; margin-top:6px; transition:transform .12s ease, filter .12s ease;
   }
   .btn-go:active{transform:scale(.98); filter:brightness(.95);}
@@ -66,11 +62,8 @@
 
   <div class="wrap">
     <div class="brand">
-      <div class="signal-mark"><span></span><span></span><span></span><span></span></div>
-      <div>
-        <div class="brand-name">EURO STORE</div>
-        <div class="brand-slogan">La qualité européenne à votre portée</div>
-      </div>
+      <img src="assets/logo-full-transparent.png" alt="EURO STORE" class="brand-logo">
+      <div class="brand-slogan">La qualité européenne à votre portée</div>
     </div>
 
     <div class="card">
