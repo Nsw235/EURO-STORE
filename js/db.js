@@ -16,8 +16,7 @@ const DB_KEYS = {
   session: 'es_session',
   config: 'es_config',
   pending: 'es_pending_sync',
-  users: 'es_users',
-  suspended: 'es_suspended'
+  users: 'es_users'
 };
 
 /* ---------------------------- Seed accounts -----------------------------
@@ -36,27 +35,32 @@ const SEED_USERS = [
 /* ---------------------------- Seed data -------------------------------- */
 
 const SEED_CATALOG = [
-  // Apple
-  { ean: '0194253715001', brand: 'Apple', model: 'iPhone 15 Pro', storage: '128 Go', color: 'Titane Noir', price: 1129 },
-  { ean: '0194253715002', brand: 'Apple', model: 'iPhone 15 Pro', storage: '256 Go', color: 'Titane Naturel', price: 1329 },
-  { ean: '0194253715003', brand: 'Apple', model: 'iPhone 15', storage: '128 Go', color: 'Noir', price: 899 },
-  { ean: '0194253715004', brand: 'Apple', model: 'iPhone 14', storage: '128 Go', color: 'Minuit', price: 749 },
-  { ean: '0194253715005', brand: 'Apple', model: 'iPhone 13', storage: '64 Go', color: 'Rose', price: 599 },
-  // Samsung
-  { ean: '8806094567001', brand: 'Samsung', model: 'Galaxy S24', storage: '256 Go', color: 'Violet Cobalt', price: 879 },
-  { ean: '8806094567002', brand: 'Samsung', model: 'Galaxy S24 Ultra', storage: '512 Go', color: 'Titane Gris', price: 1449 },
-  { ean: '8806094567003', brand: 'Samsung', model: 'Galaxy S23', storage: '128 Go', color: 'Crème', price: 699 },
-  { ean: '8806094567004', brand: 'Samsung', model: 'Galaxy A54', storage: '128 Go', color: 'Vert', price: 379 },
-  // Xiaomi
-  { ean: '6941812345001', brand: 'Xiaomi', model: 'Redmi Note 13', storage: '128 Go', color: 'Bleu Océan', price: 219 },
-  { ean: '6941812345002', brand: 'Xiaomi', model: 'Redmi Note 13 Pro', storage: '256 Go', color: 'Noir', price: 329 },
-  { ean: '6941812345003', brand: 'Xiaomi', model: '13T', storage: '256 Go', color: 'Bleu', price: 599 },
-  // Tecno
-  { ean: '6975988870001', brand: 'Tecno', model: 'Camon 20', storage: '256 Go', color: 'Argent', price: 229 },
-  { ean: '6975988870002', brand: 'Tecno', model: 'Spark 10', storage: '128 Go', color: 'Vert', price: 149 },
-  // Infinix
-  { ean: '6938533810001', brand: 'Infinix', model: 'Note 30', storage: '256 Go', color: 'Noir', price: 219 },
-  { ean: '6938533810002', brand: 'Infinix', model: 'Hot 40', storage: '128 Go', color: 'Bleu', price: 159 },
+  // Apple — téléphones
+  { ean: '0194253715001', brand: 'Apple', model: 'iPhone 15 Pro', storage: '128 Go', color: 'Titane Noir', price: 1129, category: 'phone', imageUrl: null },
+  { ean: '0194253715002', brand: 'Apple', model: 'iPhone 15 Pro', storage: '256 Go', color: 'Titane Naturel', price: 1329, category: 'phone', imageUrl: null },
+  { ean: '0194253715003', brand: 'Apple', model: 'iPhone 15', storage: '128 Go', color: 'Noir', price: 899, category: 'phone', imageUrl: null },
+  { ean: '0194253715004', brand: 'Apple', model: 'iPhone 14', storage: '128 Go', color: 'Minuit', price: 749, category: 'phone', imageUrl: null },
+  { ean: '0194253715005', brand: 'Apple', model: 'iPhone 13', storage: '64 Go', color: 'Rose', price: 599, category: 'phone', imageUrl: null },
+  // Samsung — téléphones
+  { ean: '8806094567001', brand: 'Samsung', model: 'Galaxy S24', storage: '256 Go', color: 'Violet Cobalt', price: 879, category: 'phone', imageUrl: null },
+  { ean: '8806094567002', brand: 'Samsung', model: 'Galaxy S24 Ultra', storage: '512 Go', color: 'Titane Gris', price: 1449, category: 'phone', imageUrl: null },
+  { ean: '8806094567003', brand: 'Samsung', model: 'Galaxy S23', storage: '128 Go', color: 'Crème', price: 699, category: 'phone', imageUrl: null },
+  { ean: '8806094567004', brand: 'Samsung', model: 'Galaxy A54', storage: '128 Go', color: 'Vert', price: 379, category: 'phone', imageUrl: null },
+  // Xiaomi — téléphones
+  { ean: '6941812345001', brand: 'Xiaomi', model: 'Redmi Note 13', storage: '128 Go', color: 'Bleu Océan', price: 219, category: 'phone', imageUrl: null },
+  { ean: '6941812345002', brand: 'Xiaomi', model: 'Redmi Note 13 Pro', storage: '256 Go', color: 'Noir', price: 329, category: 'phone', imageUrl: null },
+  { ean: '6941812345003', brand: 'Xiaomi', model: '13T', storage: '256 Go', color: 'Bleu', price: 599, category: 'phone', imageUrl: null },
+  // Tecno — téléphones
+  { ean: '6975988870001', brand: 'Tecno', model: 'Camon 20', storage: '256 Go', color: 'Argent', price: 229, category: 'phone', imageUrl: null },
+  { ean: '6975988870002', brand: 'Tecno', model: 'Spark 10', storage: '128 Go', color: 'Vert', price: 149, category: 'phone', imageUrl: null },
+  // Infinix — téléphones
+  { ean: '6938533810001', brand: 'Infinix', model: 'Note 30', storage: '256 Go', color: 'Noir', price: 219, category: 'phone', imageUrl: null },
+  { ean: '6938533810002', brand: 'Infinix', model: 'Hot 40', storage: '128 Go', color: 'Bleu', price: 159, category: 'phone', imageUrl: null },
+  // Écouteurs — toutes marques passent par le même référentiel EAN/IMEI
+  { ean: '0194253820001', brand: 'Apple', model: 'AirPods Pro 2', storage: 'USB-C', color: 'Blanc', price: 279, category: 'earbuds', imageUrl: null },
+  { ean: '0194253820002', brand: 'Apple', model: 'AirPods 4', storage: '—', color: 'Blanc', price: 149, category: 'earbuds', imageUrl: null },
+  { ean: '8806094580001', brand: 'Samsung', model: 'Galaxy Buds2 Pro', storage: '—', color: 'Graphite', price: 189, category: 'earbuds', imageUrl: null },
+  { ean: '6941812380001', brand: 'Xiaomi', model: 'Redmi Buds 5', storage: '—', color: 'Noir', price: 39, category: 'earbuds', imageUrl: null },
 ];
 
 function seedStock() {
@@ -64,6 +68,7 @@ function seedStock() {
     const c = SEED_CATALOG.find(p => p.ean === ean);
     return {
       imei, ean, brand: c.brand, model: c.model, storage: c.storage, color: c.color,
+      category: c.category, imageUrl: c.imageUrl,
       price: c.price, state, status: 'in_stock',
       addedAt: new Date(Date.now() - hoursAgo * 3600 * 1000).toISOString()
     };
@@ -86,6 +91,10 @@ function seedStock() {
     mk('6975988870002', '699450012233458', 'Neuf', 45),
     mk('6938533810001', '355321099887701', 'Neuf', 22),
     mk('6938533810002', '355321099887718', 'Neuf', 33),
+    mk('0194253820001', '990011223344551', 'Neuf', 6),
+    mk('0194253820002', '990011223344568', 'Neuf', 14),
+    mk('8806094580001', '990011223344575', 'Neuf', 9),
+    mk('6941812380001', '990011223344582', 'Neuf', 28),
   ];
 }
 
@@ -124,16 +133,8 @@ function init() {
   if (!localStorage.getItem(DB_KEYS.stock)) write(DB_KEYS.stock, seedStock());
   if (!localStorage.getItem(DB_KEYS.sales)) write(DB_KEYS.sales, seedSales());
   if (!localStorage.getItem(DB_KEYS.config)) {
-    // fxRate: parité fixe EUR → XOF (Franc CFA BCEAO/BEAC), 1 € = 655,957 FCFA
-    write(DB_KEYS.config, { storeName: 'EURO STORE — Smartphone & accessoires', fxRate: 655.957, posLabel: 'Poste 01' });
+    write(DB_KEYS.config, { storeName: 'EURO STORE — Rue de la République' });
   }
-  if (!localStorage.getItem(DB_KEYS.suspended)) write(DB_KEYS.suspended, []);
-  // Migration douce : complète une config déjà existante (versions précédentes) sans l'écraser.
-  const cfg = read(DB_KEYS.config, {});
-  let cfgChanged = false;
-  if (!cfg.fxRate) { cfg.fxRate = 655.957; cfgChanged = true; }
-  if (!cfg.posLabel) { cfg.posLabel = 'Poste 01'; cfgChanged = true; }
-  if (cfgChanged) write(DB_KEYS.config, cfg);
   if (!localStorage.getItem(DB_KEYS.users)) {
     write(DB_KEYS.users, SEED_USERS);
   }
@@ -201,7 +202,7 @@ const Store = {
     return catalog.find(c => c.ean === ean) || null;
   },
 
-  async addStockItem({ ean, price, imei, state }) {
+  async addStockItem({ ean, price, imei, state, imageUrl }) {
     await delay();
     const catalog = read(DB_KEYS.catalog, []);
     const cat = catalog.find(c => c.ean === ean);
@@ -210,6 +211,7 @@ const Store = {
     if (stock.some(s => s.imei === imei)) throw new Error('Cet IMEI existe déjà en stock.');
     const newItem = {
       imei, ean, brand: cat.brand, model: cat.model, storage: cat.storage, color: cat.color,
+      category: cat.category || 'phone', imageUrl: imageUrl || cat.imageUrl || null,
       price: Number(price), state, status: 'in_stock', addedAt: new Date().toISOString()
     };
     stock.unshift(newItem);
@@ -232,8 +234,8 @@ const Store = {
       id: 'S' + Date.now(),
       imei: item.imei, ean: item.ean, brand: item.brand,
       model: item.state === 'Reconditionné' ? item.model + ' — Reconditionné' : item.model,
-      storage: item.storage, price: Number(finalPrice), timestamp: new Date().toISOString(),
-      seller: seller || 'Vendeur'
+      storage: item.storage, category: item.category || 'phone', price: Number(finalPrice),
+      timestamp: new Date().toISOString(), seller: seller || 'Vendeur'
     };
     const sales = read(DB_KEYS.sales, []);
     sales.unshift(sale);
@@ -245,51 +247,6 @@ const Store = {
       write(DB_KEYS.pending, pending);
     }
     return sale;
-  },
-
-  // Vend en une seule transaction tous les articles d'un panier (liste d'IMEI + prix finaux).
-  // Retourne { sales, failed } — failed liste les IMEI qui n'ont pas pu être vendus
-  // (ex. retirés du stock entre-temps) pour que l'UI puisse les signaler sans tout annuler.
-  async sellItems(cartItems, seller) {
-    const sales = []; const failed = [];
-    for (const c of cartItems) {
-      try { sales.push(await Store.sellItem(c.imei, c.price, seller)); }
-      catch (e) { failed.push({ imei: c.imei, error: e.message }); }
-    }
-    return { sales, failed };
-  },
-
-  getConfig() { return read(DB_KEYS.config, { fxRate: 655.957, storeName: 'EURO STORE', posLabel: 'Poste 01' }); },
-  setConfig(updates) { const cfg = { ...Store.getConfig(), ...updates }; write(DB_KEYS.config, cfg); return cfg; },
-
-  /* ------------------------ Ventes suspendues (mise en attente) ----------- */
-
-  async suspendSale(cartItems, seller) {
-    await delay(80);
-    const suspended = read(DB_KEYS.suspended, []);
-    const rec = { id: 'H' + Date.now(), items: cartItems, seller: seller || 'Vendeur', createdAt: new Date().toISOString() };
-    suspended.unshift(rec);
-    write(DB_KEYS.suspended, suspended);
-    return rec;
-  },
-
-  async getSuspendedSales() {
-    await delay(60);
-    return read(DB_KEYS.suspended, []);
-  },
-
-  async resumeSuspended(id) {
-    await delay(60);
-    const suspended = read(DB_KEYS.suspended, []);
-    const rec = suspended.find(s => s.id === id);
-    if (!rec) throw new Error('Vente suspendue introuvable.');
-    write(DB_KEYS.suspended, suspended.filter(s => s.id !== id));
-    return rec;
-  },
-
-  async deleteSuspended(id) {
-    await delay(60);
-    write(DB_KEYS.suspended, read(DB_KEYS.suspended, []).filter(s => s.id !== id));
   },
 
   async updateStockItem(imei, updates) {

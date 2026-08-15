@@ -3,23 +3,23 @@
   const session = Auth.requireRole('admin');
   if (!session) return;
 
-  document.getElementById('adminName').textContent = session.name;
-  document.getElementById('adminEmail').textContent = session.email || '';
   document.getElementById('adminAvatar').textContent = session.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-  document.getElementById('logoutBtn').addEventListener('click', () => {
+  document.getElementById('adminEmail').textContent = 'Bonjour, ' + session.name;
+  document.getElementById('adminAvatar').addEventListener('click', () => {
     if (confirm('Se déconnecter ?')) { Auth.logout(); window.location.href = 'index.html'; }
   });
 
   const cfg = read(DB_KEYS.config, {});
-  document.getElementById('storeNameLabel').textContent = cfg.storeName || 'EURO STORE';
+  document.getElementById('storeNameLabel').textContent = cfg.storeName || 'Pilotage boutique';
   document.getElementById('storeNameInput').value = cfg.storeName || '';
 
-  /* --------------------------- Navigation --------------------------- */
+  /* --------------------------- Navigation (bottom nav) --------------------------- */
   document.querySelectorAll('.nav-item').forEach(item => item.addEventListener('click', () => {
     document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
     item.classList.add('active');
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById('page-' + item.dataset.page).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
     if (item.dataset.page === 'stock') renderStockTable();
     if (item.dataset.page === 'ventes') renderAllSales();
     if (item.dataset.page === 'rapports') renderReports();
@@ -36,6 +36,15 @@
   }));
 
   function eur(n) { return Math.round(n).toLocaleString('fr-FR') + ' €'; }
+  const ICONS = {
+    phone: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="6" y="2" width="12" height="20" rx="2.5"/></svg>`,
+    earbuds: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 10v6a2.5 2.5 0 0 0 5 0v-2"/><path d="M18 10v6a2.5 2.5 0 0 1-5 0v-2"/><circle cx="6" cy="8" r="2.5"/><circle cx="18" cy="8" r="2.5"/></svg>`
+  };
+  function thumbHtml(item) {
+    if (item.imageUrl) return `<div class="item-thumb"><img src="${item.imageUrl}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:9px;"></div>`;
+    return `<div class="item-thumb">${ICONS[item.category] || ICONS.phone}</div>`;
+  }
+  const phoneIcon = ICONS.phone; // kept for any remaining references
 
   async function renderDashboard() {
     const kpis = await Store.getKPIs(currentRange);
@@ -53,7 +62,7 @@
     const bars = document.getElementById('bars');
     bars.innerHTML = days.map(d => `
       <div class="bar-col">
-        <div class="bar" style="height:${Math.max(10, (d.count / max) * 150)}px"><i style="height:100%"></i></div>
+        <div class="bar" style="height:${Math.max(8, (d.count / max) * 110)}px"><i style="height:100%"></i></div>
         <div class="lbl">${d.label}</div>
       </div>`).join('');
     document.getElementById('barsTotal').textContent = days.reduce((s, d) => s + d.count, 0) + ' unités';
@@ -80,22 +89,26 @@
     } else { alertBox.style.display = 'none'; }
 
     const sales = await Store.getSales(8);
-    document.getElementById('salesTableBody').innerHTML = sales.map(rowHtml).join('');
-    attachRowActions();
+    document.getElementById('salesTableBody').innerHTML = sales.length
+      ? sales.map(saleCardHtml).join('')
+      : '<p class="empty-msg">Aucune vente enregistrée.</p>';
   }
 
-  function rowHtml(s) {
+  function saleCardHtml(s) {
     const d = new Date(s.timestamp);
     const time = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-    return `<tr>
-      <td>${time}</td>
-      <td><div class="prod-cell"><div class="prod-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="6" y="2" width="12" height="20" rx="2.5"/></svg></div>${s.brand} ${s.model} · ${s.storage}</div></td>
-      <td class="imei-cell">${s.imei}</td>
-      <td class="price-cell">${s.price.toFixed(2).replace('.', ',')} €</td>
-      <td><div class="row-actions"><div class="icon-btn" title="Détails"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></div></div></td>
-    </tr>`;
+    return `<div class="item-card">
+      ${thumbHtml(s)}
+      <div class="item-info">
+        <div class="item-title">${s.brand} ${s.model}</div>
+        <div class="item-sub">${s.storage} · ${s.imei}</div>
+      </div>
+      <div class="item-right">
+        <div class="item-price">${s.price.toFixed(2).replace('.', ',')} €</div>
+        <div class="item-meta">${time}</div>
+      </div>
+    </div>`;
   }
-  function attachRowActions() {} // placeholder for future row-level edit/delete on sales history
 
   /* --------------------------- Stock management --------------------------- */
 
@@ -107,17 +120,23 @@
     const filtered = stock.filter(s =>
       s.model.toLowerCase().includes(query) || s.brand.toLowerCase().includes(query) || s.imei.includes(query)
     );
-    document.getElementById('stockTableBody').innerHTML = filtered.map(s => `
-      <tr>
-        <td><div class="prod-cell"><div class="prod-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="6" y="2" width="12" height="20" rx="2.5"/></svg></div>${s.brand} ${s.model} · ${s.storage} · ${s.color}</div></td>
-        <td class="imei-cell">${s.imei}</td>
-        <td><span class="status-pill in">${s.state}</span></td>
-        <td class="price-cell">${s.price.toFixed(2).replace('.', ',')} €</td>
-        <td><div class="row-actions">
-          <div class="icon-btn edit-stock" data-imei="${s.imei}" title="Modifier"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></div>
-          <div class="icon-btn danger delete-stock" data-imei="${s.imei}" title="Supprimer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></div>
-        </div></td>
-      </tr>`).join('');
+    document.getElementById('stockTableBody').innerHTML = filtered.length ? filtered.map(s => `
+      <div class="item-card">
+        ${thumbHtml(s)}
+        <div class="item-info">
+          <div class="item-title">${s.brand} ${s.model}</div>
+          <div class="item-sub">${s.storage} · ${s.color}</div>
+          <div class="item-meta">${s.imei}</div>
+        </div>
+        <div class="item-right">
+          <span class="status-pill in">${s.state}</span>
+          <div class="item-price">${s.price.toFixed(2).replace('.', ',')} €</div>
+          <div class="item-actions">
+            <div class="icon-btn edit-stock" data-imei="${s.imei}" title="Modifier"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></div>
+            <div class="icon-btn danger delete-stock" data-imei="${s.imei}" title="Supprimer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></div>
+          </div>
+        </div>
+      </div>`).join('') : '<p class="empty-msg">Aucun article ne correspond à la recherche.</p>';
 
     document.querySelectorAll('.edit-stock').forEach(btn => btn.addEventListener('click', () => openEditModal(btn.dataset.imei)));
     document.querySelectorAll('.delete-stock').forEach(btn => btn.addEventListener('click', async () => {
@@ -128,6 +147,106 @@
     }));
   }
   document.getElementById('stockSearch').addEventListener('input', renderStockTable);
+
+  /* --------------------------- Ajout de stock (réception, côté admin) --------------------------- */
+
+  const addModal = document.getElementById('addModal');
+  const addEan = document.getElementById('addEan');
+  const addPreview = document.getElementById('addPreview');
+  const addError = document.getElementById('addError');
+  let addCatalog = null;
+
+  document.getElementById('btnOpenAddStock').addEventListener('click', () => {
+    addEan.value = ''; document.getElementById('addImei').value = '';
+    document.getElementById('addPrice').value = ''; document.getElementById('addState').value = 'Neuf';
+    document.getElementById('addImageUrl').value = '';
+    addPreview.style.display = 'none'; addError.style.display = 'none';
+    addCatalog = null;
+    addModal.classList.add('show');
+    addEan.focus();
+  });
+  document.getElementById('cancelAdd').addEventListener('click', () => addModal.classList.remove('show'));
+
+  async function lookupAddEan() {
+    const ean = addEan.value.trim();
+    addCatalog = ean ? await Store.getCatalogByEan(ean) : null;
+    if (addCatalog) {
+      addPreview.style.display = 'block';
+      document.getElementById('addPreviewTitle').textContent = addCatalog.brand + ' ' + addCatalog.model;
+      document.getElementById('addPreviewSub').textContent = addCatalog.storage + ' · ' + addCatalog.color;
+      if (!document.getElementById('addPrice').value) document.getElementById('addPrice').value = addCatalog.price;
+    } else {
+      addPreview.style.display = 'none';
+      if (ean) { addError.style.display = 'block'; addError.textContent = 'EAN inconnu du référentiel catalogue.'; }
+    }
+  }
+  addEan.addEventListener('blur', lookupAddEan);
+  addEan.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); lookupAddEan(); } });
+
+  document.getElementById('confirmAdd').addEventListener('click', async () => {
+    addError.style.display = 'none';
+    if (!addCatalog) { addError.style.display = 'block'; addError.textContent = 'Renseignez un EAN valide.'; return; }
+    const imei = document.getElementById('addImei').value.trim();
+    const price = parseFloat(document.getElementById('addPrice').value);
+    const state = document.getElementById('addState').value.trim() || 'Neuf';
+    const imageUrl = document.getElementById('addImageUrl').value.trim() || null;
+    if (!imei || !price) { addError.style.display = 'block'; addError.textContent = 'IMEI et prix sont requis.'; return; }
+    try {
+      await Store.addStockItem({ ean: addCatalog.ean, price, imei, state, imageUrl });
+      addModal.classList.remove('show');
+      renderStockTable();
+    } catch (e) {
+      addError.style.display = 'block'; addError.textContent = e.message;
+    }
+  });
+
+  /* --------------------------- Scan caméra (réception) --------------------------- */
+
+  const camModal = document.getElementById('camModal');
+  const camStatus = document.getElementById('camStatus');
+  let html5QrCode = null;
+
+  async function openCameraScan() {
+    camModal.classList.add('show');
+    camStatus.style.color = 'var(--muted)';
+    camStatus.textContent = 'Initialisation de la caméra…';
+    if (typeof Html5Qrcode === 'undefined') {
+      camStatus.style.color = 'var(--danger)';
+      camStatus.textContent = 'Bibliothèque de scan indisponible. Utilisez la saisie manuelle.';
+      return;
+    }
+    try {
+      html5QrCode = new Html5Qrcode('camReader', {
+        formatsToSupport: [
+          Html5QrcodeSupportedFormats.EAN_13, Html5QrcodeSupportedFormats.EAN_8,
+          Html5QrcodeSupportedFormats.UPC_A, Html5QrcodeSupportedFormats.CODE_128,
+          Html5QrcodeSupportedFormats.QR_CODE
+        ],
+        verbose: false
+      });
+      await html5QrCode.start(
+        { facingMode: 'environment' },
+        { fps: 12, qrbox: { width: 240, height: 150 } },
+        (decodedText) => onCameraDecode(decodedText),
+        () => {}
+      );
+      camStatus.textContent = 'Caméra active — visez le code-barres.';
+    } catch (err) {
+      camStatus.style.color = 'var(--danger)';
+      camStatus.textContent = "Impossible d'accéder à la caméra. Utilisez la saisie manuelle.";
+    }
+  }
+  async function closeCameraScan() {
+    camModal.classList.remove('show');
+    if (html5QrCode) { try { await html5QrCode.stop(); html5QrCode.clear(); } catch (e) {} html5QrCode = null; }
+  }
+  async function onCameraDecode(code) {
+    addEan.value = code;
+    await closeCameraScan();
+    lookupAddEan();
+  }
+  document.getElementById('btnCamScanAdd').addEventListener('click', openCameraScan);
+  document.getElementById('camClose').addEventListener('click', closeCameraScan);
 
   async function openEditModal(imei) {
     const stock = await Store.getStock();
@@ -152,16 +271,18 @@
 
   async function renderAllSales() {
     const sales = await Store.getSales();
-    document.getElementById('allSalesBody').innerHTML = sales.map(s => {
+    document.getElementById('allSalesBody').innerHTML = sales.length ? sales.map(s => {
       const d = new Date(s.timestamp);
-      return `<tr>
-        <td>${d.toLocaleDateString('fr-FR')}</td>
-        <td>${d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</td>
-        <td>${s.brand} ${s.model} · ${s.storage}</td>
-        <td class="imei-cell">${s.imei}</td>
-        <td class="price-cell">${s.price.toFixed(2).replace('.', ',')} €</td>
-      </tr>`;
-    }).join('');
+      return `<div class="item-card">
+        ${thumbHtml(s)}
+        <div class="item-info">
+          <div class="item-title">${s.brand} ${s.model}</div>
+          <div class="item-sub">${s.storage} · ${s.imei}</div>
+          <div class="item-meta">${d.toLocaleDateString('fr-FR')} · ${d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</div>
+        </div>
+        <div class="item-right"><div class="item-price">${s.price.toFixed(2).replace('.', ',')} €</div></div>
+      </div>`;
+    }).join('') : '<p class="empty-msg">Aucune vente enregistrée.</p>';
   }
 
   /* --------------------------- Rapports page --------------------------- */
@@ -179,7 +300,7 @@
         <div class="name">${brand}</div>
         <div class="stock-meter"><span class="on" style="flex:${d.ca}"></span><span style="flex:${Math.max(1, maxCa - d.ca)}"></span></div>
         <div class="count">${eur(d.ca)}</div>
-      </div>`).join('') || '<p style="color:var(--muted); font-size:13px;">Aucune vente sur la période.</p>';
+      </div>`).join('') || '<p class="empty-msg">Aucune vente sur la période.</p>';
 
     const totalCa = recent.reduce((s, x) => s + x.price, 0);
     document.getElementById('reportSummary').innerHTML = `
