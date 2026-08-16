@@ -12,6 +12,7 @@ export default function CaissePage() {
   const [soldOffline, setSoldOffline] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [showAlert, setShowAlert] = useState(false);
+  const [photoFailed, setPhotoFailed] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   async function handleScan(code: string) {
@@ -23,6 +24,7 @@ export default function CaissePage() {
       setScreen("error");
       return;
     }
+    setPhotoFailed(false);
     setProduct(result.product);
     setScreen("product");
   }
@@ -49,7 +51,7 @@ export default function CaissePage() {
 
   return (
     <div className="caisse">
-      {screen === "idle" || screen === "scanning" ? (
+      {(screen === "idle" || screen === "scanning") && (
         <div className="scan-zone">
           <form
             onSubmit={(e) => {
@@ -57,8 +59,11 @@ export default function CaissePage() {
               handleScan(inputRef.current?.value ?? "");
             }}
           >
-            <button type="button" className={`lens ${screen === "scanning" ? "busy" : ""}`}
-              onClick={() => inputRef.current?.focus()}>
+            <button
+              type="button"
+              className={`lens ${screen === "scanning" ? "busy" : ""}`}
+              onClick={() => inputRef.current?.focus()}
+            >
               <span>{screen === "scanning" ? "SCAN..." : "SCAN"}</span>
             </button>
             <input
@@ -73,7 +78,7 @@ export default function CaissePage() {
             Signaler stock bas
           </button>
         </div>
-      ) : null}
+      )}
 
       {screen === "error" && (
         <div className="scan-zone">
@@ -86,15 +91,43 @@ export default function CaissePage() {
 
       {screen === "product" && product && (
         <div className="product-card">
+          <div className="product-photo">
+            {product.imageUrl && !photoFailed ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={product.imageUrl}
+                alt={product.name}
+                onError={() => setPhotoFailed(true)}
+              />
+            ) : (
+              <div className="photo-placeholder">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logo-header.png" alt="" className="photo-placeholder-mark" />
+                <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.2">
+                  <rect x="3" y="6" width="18" height="14" rx="2" />
+                  <circle cx="12" cy="13" r="3.4" />
+                  <path d="M8 6l1.4-2h5.2L16 6" />
+                </svg>
+                <span>Photo à venir</span>
+              </div>
+            )}
+          </div>
+
           <div className="product-info">
             <div className="eyebrow">{product.brand.toUpperCase()}</div>
             <div className="product-name">{product.name}</div>
-            <div className="product-code">
-              {product.category === "telephone" ? `IMEI ${product.imei}` : `EAN ${product.ean}`}
+            <div className="chip-row">
+              <span className="chip">{product.condition}</span>
+              <span className="chip">
+                {product.category === "telephone"
+                  ? `IMEI ${product.imei}`
+                  : `EAN ${product.ean}`}
+              </span>
             </div>
             <div className="price">{product.salePrice.toFixed(0)}€</div>
             <div className="stock-note">TTC · {product.quantity} en stock</div>
           </div>
+
           <div className="actions">
             <button className="btn-sell" onClick={handleSell}>
               VENDRE
@@ -108,8 +141,12 @@ export default function CaissePage() {
 
       {screen === "sold" && product && (
         <div className="sold-zone">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-header.png" alt="EURO STORE" className="sold-logo" />
           <div className="check-circle">✓</div>
-          <p>{soldOffline ? "Vente enregistrée (hors-ligne)" : "Vente enregistrée"}</p>
+          <p className="sold-label">
+            {soldOffline ? "Vente enregistrée (hors-ligne)" : "Vente enregistrée"}
+          </p>
           <div className="price">{product.salePrice.toFixed(0)}€</div>
           <button className="btn-secondary" onClick={reset}>
             Nouvelle vente
@@ -117,11 +154,11 @@ export default function CaissePage() {
         </div>
       )}
 
-      {showAlert && product && (
-        <AlertModal ean={product.ean} onClose={() => setShowAlert(false)} />
-      )}
-      {showAlert && !product && (
-        <AlertModal ean="" onClose={() => setShowAlert(false)} />
+      {showAlert && (
+        <AlertModal
+          ean={product?.ean ?? ""}
+          onClose={() => setShowAlert(false)}
+        />
       )}
     </div>
   );
