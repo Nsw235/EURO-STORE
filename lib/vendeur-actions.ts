@@ -9,12 +9,12 @@ export type ScannedProduct = {
   name: string;
   brand: string;
   category: "telephone" | "accessoire";
+  condition: string;
+  imageUrl: string | null;
   salePrice: number;
   quantity: number;
 };
 
-// Cherche l'article par EAN (accessoire) ou IMEI (téléphone), retourne
-// le premier lot "en_stock" disponible avec quantité > 0.
 export async function scanArticle(code: string): Promise<
   { ok: true; product: ScannedProduct } | { ok: false; message: string }
 > {
@@ -22,7 +22,9 @@ export async function scanArticle(code: string): Promise<
 
   const { data, error } = await supabase
     .from("stock_items")
-    .select("id, ean, imei, sale_price, quantity, status, catalog_products(name, brand, category)")
+    .select(
+      "id, ean, imei, sale_price, quantity, status, condition, catalog_products(name, brand, category, image_url)"
+    )
     .or(`imei.eq.${code},ean.eq.${code}`)
     .eq("status", "en_stock")
     .gt("quantity", 0)
@@ -47,13 +49,14 @@ export async function scanArticle(code: string): Promise<
       name: catalog?.name ?? "Article",
       brand: catalog?.brand ?? "",
       category: catalog?.category ?? "accessoire",
+      condition: data.condition,
+      imageUrl: catalog?.image_url ?? null,
       salePrice: Number(data.sale_price),
       quantity: data.quantity,
     },
   };
 }
 
-// Vente atomique via la fonction RPC sell_product() (decrement + transaction).
 export async function sellArticle(stockItemId: string): Promise<
   { ok: true; salePrice: number } | { ok: false; message: string }
 > {
@@ -76,7 +79,10 @@ export async function getCaDuJour(): Promise<{
   panierMoyen: number;
 }> {
   const supabase = createClient();
-  const { data, error } = await supabase.rpc("ca_du_jour").single();
+
+  const { data, error } = await supabase
+    .rpc("ca_du_jour")
+    .single<{ total: number; nb_ventes: number; panier_moyen: number }>();
 
   if (error || !data) return { total: 0, nbVentes: 0, panierMoyen: 0 };
 
