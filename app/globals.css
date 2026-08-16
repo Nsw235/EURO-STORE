@@ -21,6 +21,7 @@ body {
   font-family: "Inter", system-ui, sans-serif;
 }
 
+/* ── Shell ── */
 .phone-shell {
   min-height: 100vh;
   display: flex;
@@ -60,12 +61,19 @@ body {
 }
 .bottom-nav a.active { color: var(--gold); }
 
-.scan-zone { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; }
+/* ── Caisse — scan ── */
+.caisse { flex: 1; display: flex; flex-direction: column; }
+
+.scan-zone {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 18px;
+}
 .lens {
   width: 140px; height: 140px; border-radius: 50%;
   background: radial-gradient(circle at 35% 30%, #232f66, var(--navy-950) 70%);
   border: 3px solid var(--gold); color: var(--gold);
   font-weight: 600; font-size: 13px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
 }
 .lens.busy { opacity: 0.7; }
 .scan-input {
@@ -80,59 +88,152 @@ body {
 }
 .error-text { color: #e27272; font-size: 14px; text-align: center; }
 
-.product-card { flex: 1; display: flex; flex-direction: column; gap: 16px; }
+/* ── Caisse — fiche produit ── */
+.product-card { flex: 1; display: flex; flex-direction: column; gap: 14px; }
+
+.product-photo {
+  width: 100%; aspect-ratio: 4 / 3; border-radius: 20px; overflow: hidden;
+  background: var(--navy-800); border: 1px solid var(--navy-700);
+  display: flex; align-items: center; justify-content: center;
+}
+.product-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.photo-placeholder {
+  position: relative; display: flex; flex-direction: column;
+  align-items: center; gap: 8px; color: #3a4478;
+}
+.photo-placeholder-mark {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 70px; opacity: 0.07; pointer-events: none;
+}
+.photo-placeholder svg { position: relative; }
+.photo-placeholder span { position: relative; font-size: 11px; color: #5b6088; }
+
 .product-info {
   background: var(--navy-800); border: 1px solid var(--navy-700);
-  border-radius: 20px; padding: 22px; text-align: center;
+  border-radius: 20px; padding: 20px; text-align: center;
 }
 .eyebrow { color: var(--muted); font-size: 11px; letter-spacing: 1px; }
 .product-name { font-size: 18px; font-weight: 600; margin-top: 2px; }
-.product-code { color: #5b6088; font-family: "JetBrains Mono", monospace; font-size: 11px; margin-top: 6px; }
-.price { color: var(--gold); font-family: "Fraunces", serif; font-weight: 700; font-size: 46px; margin-top: 18px; }
-.stock-note { color: var(--muted); font-size: 11px; margin-top: 6px; }
 
-.actions { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
-.btn-sell { background: var(--green); border: none; border-radius: 14px; padding: 16px; color: #08281a; font-weight: 700; font-size: 16px; cursor: pointer; }
-.btn-cancel { background: transparent; border: 1px solid var(--navy-700); border-radius: 14px; padding: 12px; color: var(--muted); font-size: 13px; cursor: pointer; }
-.btn-secondary { background: var(--navy-700); border: 1px solid var(--gold); color: var(--gold); border-radius: 20px; padding: 10px 22px; font-size: 13px; cursor: pointer; }
-.btn-gold { background: var(--gold); border: none; color: var(--navy-950); font-weight: 600; border-radius: 10px; padding: 10px; cursor: pointer; }
-
-.sold-zone { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
-.check-circle {
-  width: 72px; height: 72px; border-radius: 50%; background: rgba(47,174,107,0.15);
-  border: 2px solid var(--green); color: var(--green);
-  display: flex; align-items: center; justify-content: center; font-size: 30px;
+.chip-row {
+  display: flex; gap: 6px; justify-content: center;
+  flex-wrap: wrap; margin-top: 10px;
+}
+.chip {
+  background: var(--navy-700); color: #c9a97a;
+  font-size: 11px; padding: 3px 10px; border-radius: 20px;
+  font-family: "JetBrains Mono", monospace;
 }
 
+.price {
+  color: var(--gold); font-family: "Fraunces", serif;
+  font-weight: 700; font-size: 46px; margin-top: 14px;
+}
+.stock-note { color: var(--muted); font-size: 11px; margin-top: 4px; }
+
+.actions { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
+.btn-sell {
+  background: var(--green); border: none; border-radius: 14px;
+  padding: 16px; color: #08281a; font-weight: 700; font-size: 16px; cursor: pointer;
+}
+.btn-cancel {
+  background: transparent; border: 1px solid var(--navy-700);
+  border-radius: 14px; padding: 12px; color: var(--muted);
+  font-size: 13px; cursor: pointer;
+}
+.btn-secondary {
+  background: var(--navy-700); border: 1px solid var(--gold);
+  color: var(--gold); border-radius: 20px; padding: 10px 22px;
+  font-size: 13px; cursor: pointer;
+}
+.btn-gold {
+  background: var(--gold); border: none; color: var(--navy-950);
+  font-weight: 600; border-radius: 10px; padding: 10px; cursor: pointer;
+}
+
+/* ── Caisse — vente confirmée ── */
+.sold-zone {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 12px;
+}
+.sold-logo { height: 24px; width: auto; opacity: 0.85; margin-bottom: 4px; }
+.sold-label { color: var(--muted); font-size: 13px; margin: 0; }
+.check-circle {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: rgba(47,174,107,0.15); border: 2px solid var(--green);
+  color: var(--green); display: flex; align-items: center;
+  justify-content: center; font-size: 30px;
+}
+
+/* ── Modal ── */
 .modal-backdrop {
   position: absolute; inset: 0; background: rgba(7,11,26,0.85);
   display: flex; align-items: center; justify-content: center; padding: 24px;
 }
-.modal { background: var(--navy-800); border: 1px solid var(--navy-700); border-radius: 18px; padding: 22px; width: 100%; }
+.modal {
+  background: var(--navy-800); border: 1px solid var(--navy-700);
+  border-radius: 18px; padding: 22px; width: 100%;
+}
 .modal-title { font-weight: 600; font-size: 15px; }
 .modal-sub { color: var(--muted); font-size: 12px; margin-bottom: 14px; }
-.modal input { width: 100%; background: var(--navy-900); border: 1px solid var(--navy-700); border-radius: 10px; padding: 10px; color: var(--ivory); font-size: 13px; margin-bottom: 16px; }
+.modal input {
+  width: 100%; background: var(--navy-900); border: 1px solid var(--navy-700);
+  border-radius: 10px; padding: 10px; color: var(--ivory);
+  font-size: 13px; margin-bottom: 16px;
+}
 .modal-actions { display: flex; gap: 8px; }
 .modal-actions button { flex: 1; padding: 10px; border-radius: 10px; font-size: 13px; }
 
+/* ── Dashboard ── */
 .dashboard { display: flex; flex-direction: column; }
-.ca-total { color: var(--gold); font-family: "Fraunces", serif; font-weight: 700; font-size: 40px; }
+.ca-total {
+  color: var(--gold); font-family: "Fraunces", serif;
+  font-weight: 700; font-size: 40px;
+}
 .ca-meta { color: var(--muted); font-size: 12px; margin-bottom: 22px; }
 .section-title { font-size: 13px; font-weight: 500; margin-bottom: 10px; }
-.search-input { width: 100%; background: var(--navy-800); border: 1px solid var(--navy-700); border-radius: 10px; padding: 10px 12px; color: var(--ivory); font-size: 13px; margin-bottom: 14px; }
+.search-input {
+  width: 100%; background: var(--navy-800); border: 1px solid var(--navy-700);
+  border-radius: 10px; padding: 10px 12px; color: var(--ivory);
+  font-size: 13px; margin-bottom: 14px;
+}
 .stock-list { display: flex; flex-direction: column; gap: 8px; }
-.stock-row { background: var(--navy-800); border: 1px solid var(--navy-700); border-radius: 12px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; }
+.stock-row {
+  background: var(--navy-800); border: 1px solid var(--navy-700);
+  border-radius: 12px; padding: 10px 12px;
+  display: flex; justify-content: space-between; align-items: center;
+}
 .stock-name { font-size: 13px; font-weight: 500; }
 .stock-qty { color: var(--muted); font-size: 11px; }
 .stock-qty.out { color: #e27272; }
 .stock-price { color: var(--gold); font-size: 14px; font-weight: 600; }
 .empty { color: var(--muted); font-size: 12px; }
 
-.login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--navy-950); }
-.login-card { width: 320px; background: var(--navy-900); border: 1px solid var(--navy-700); border-radius: 18px; padding: 28px; display: flex; flex-direction: column; gap: 4px; }
+/* ── Login ── */
+.login-screen {
+  min-height: 100vh; display: flex; align-items: center;
+  justify-content: center; background: var(--navy-950);
+}
+.login-card {
+  width: 320px; background: var(--navy-900); border: 1px solid var(--navy-700);
+  border-radius: 18px; padding: 28px; display: flex; flex-direction: column; gap: 4px;
+}
 .login-logo { width: 100%; height: auto; display: block; margin: 0 auto; }
-.login-sub { color: var(--muted); font-size: 12px; text-align: center; margin-top: 8px; margin-bottom: 18px; }
+.login-sub {
+  color: var(--muted); font-size: 12px; text-align: center;
+  margin-top: 8px; margin-bottom: 18px;
+}
 .login-card label { font-size: 12px; color: var(--muted); margin-top: 10px; }
-.login-card input { background: var(--navy-800); border: 1px solid var(--navy-700); border-radius: 10px; padding: 10px; color: var(--ivory); font-size: 13px; margin-top: 4px; }
-.login-card button { margin-top: 20px; background: var(--gold); border: none; border-radius: 10px; padding: 12px; color: var(--navy-950); font-weight: 600; cursor: pointer; }
+.login-card input {
+  background: var(--navy-800); border: 1px solid var(--navy-700);
+  border-radius: 10px; padding: 10px; color: var(--ivory);
+  font-size: 13px; margin-top: 4px;
+}
+.login-card button {
+  margin-top: 20px; background: var(--gold); border: none;
+  border-radius: 10px; padding: 12px; color: var(--navy-950);
+  font-weight: 600; cursor: pointer;
+}
 .login-error { color: #e27272; font-size: 12px; margin-top: 10px; }
