@@ -1,12 +1,14 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
+import type { CartLine, PaymentMethod, SaleReceipt } from "@/lib/vendeur-actions";
 
 const QUEUE_KEY = "euro-store:pending-sales";
 
 type PendingSale = {
   localId: string;
-  stockItemId: string;
+  items: CartLine[];
+  paymentMethod: PaymentMethod;
   queuedAt: string;
 };
 
@@ -27,39 +29,62 @@ export function queuePendingCount() {
   return readQueue().length;
 }
 
-// Tente une vente en direct ; si le réseau échoue, met en file locale
+// Tente une vente panier en direct ; si le réseau échoue, met en file locale
 // pour synchronisation automatique au retour de connexion.
-export async function sellWithOfflineFallback(stockItemId: string) {
+export async function sellCartWithOfflineFallback(
+  items: CartLine[],
+  paymentMethod: PaymentMethod
+): Promise<
+  | { ok: true; offline: false; sale: SaleReceipt }
+  | { ok: true; offline: true; sale: null }
+  | { ok: false; message: string }
+> {
   const supabase = createClient();
 
-  if (navigator.onLine) {
-    const { data, error } = await supabase.rpc("sell_product", {
-      p_stock_item_id: stockItemId,
+  if (typeof navigator !== "undefined" && navigator.onLine) {
+    const { data, error } = await supabase.rpc("create_sale", {
+      p_items: items.map((i) => ({ stock_item_id: i.stockItemId, quantity: i.quantity })),
+      p_payment_method: paymentMethod,
     });
-    if (!error) return { ok: true as const, offline: false, salePrice: Number(data.sale_price) };
-    // erreur réseau probable -> on tente la mise en file, sinon on remonte l'erreur métier
-    if (!navigator.onLine) {
-      queueSale(stockItemId);
-      return { ok: true as const, offline: true, salePrice: null };
+
+    if (!error && data) {
+      return {
+        ok: true,
+        offline: false,
+        sale: {
+          saleId: data.id,
+          subtotal: Number(data.subtotal),
+          tva: Number(data.tva),
+          total: Number(data.total),
+          paymentMethod: data.payment_method,
+          soldAt: data.sold_at,
+        },
+      };
     }
-    return { ok: false as const, message: error.message };
+
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      queueSale(items, paymentMethod);
+      return { ok: true, offline: true, sale: null };
+    }
+    return { ok: false, message: error?.message ?? "Échec du paiement." };
   }
 
-  queueSale(stockItemId);
-  return { ok: true as const, offline: true, salePrice: null };
+  queueSale(items, paymentMethod);
+  return { ok: true, offline: true, sale: null };
 }
 
-function queueSale(stockItemId: string) {
+function queueSale(items: CartLine[], paymentMethod: PaymentMethod) {
   const queue = readQueue();
   queue.push({
     localId: crypto.randomUUID(),
-    stockItemId,
+    items,
+    paymentMethod,
     queuedAt: new Date().toISOString(),
   });
   writeQueue(queue);
 }
 
-// Appelée au retour réseau (voir hook useOfflineSync) : rejoue les ventes en attente.
+// Appelée au retour réseau (voir hook useOfflineSync) : rejoue les paniers en attente.
 export async function syncPendingSales(): Promise<{ synced: number; failed: number }> {
   const supabase = createClient();
   const queue = readQueue();
@@ -70,8 +95,9 @@ export async function syncPendingSales(): Promise<{ synced: number; failed: numb
   const remaining: PendingSale[] = [];
 
   for (const sale of queue) {
-    const { error } = await supabase.rpc("sell_product", {
-      p_stock_item_id: sale.stockItemId,
+    const { error } = await supabase.rpc("create_sale", {
+      p_items: sale.items.map((i) => ({ stock_item_id: i.stockItemId, quantity: i.quantity })),
+      p_payment_method: sale.paymentMethod,
     });
     if (error) {
       failed++;

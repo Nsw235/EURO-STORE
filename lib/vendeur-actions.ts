@@ -73,6 +73,49 @@ export async function sellArticle(stockItemId: string): Promise<
   return { ok: true, salePrice: Number(data.sale_price) };
 }
 
+export type PaymentMethod = "especes" | "carte" | "virement" | "autre";
+
+export type CartLine = { stockItemId: string; quantity: number };
+
+export type SaleReceipt = {
+  saleId: string;
+  subtotal: number;
+  tva: number;
+  total: number;
+  paymentMethod: PaymentMethod;
+  soldAt: string;
+};
+
+// Vente panier : un ou plusieurs articles + mode de paiement, en une seule
+// transaction atomique côté base (voir la fonction create_sale).
+export async function createSale(
+  items: CartLine[],
+  paymentMethod: PaymentMethod
+): Promise<{ ok: true; sale: SaleReceipt } | { ok: false; message: string }> {
+  const supabase = createClient();
+
+  const { data, error } = await supabase.rpc("create_sale", {
+    p_items: items.map((i) => ({ stock_item_id: i.stockItemId, quantity: i.quantity })),
+    p_payment_method: paymentMethod,
+  });
+
+  if (error || !data) {
+    return { ok: false, message: error?.message ?? "Échec du paiement." };
+  }
+
+  return {
+    ok: true,
+    sale: {
+      saleId: data.id,
+      subtotal: Number(data.subtotal),
+      tva: Number(data.tva),
+      total: Number(data.total),
+      paymentMethod: data.payment_method,
+      soldAt: data.sold_at,
+    },
+  };
+}
+
 export async function getCaDuJour(): Promise<{
   total: number;
   nbVentes: number;
