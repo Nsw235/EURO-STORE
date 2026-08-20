@@ -3,79 +3,82 @@
 import { createClient } from "@/lib/supabase/server";
 
 export type ScannedProduct = {
-  stockItemId: string;
+  produitId: string;
+  uniteImeiId: string | null; // non-null pour un téléphone (unité physique précise)
   ean: string;
   imei: string | null;
   name: string;
   brand: string;
   category: "telephone" | "accessoire";
-  condition: string;
   imageUrl: string | null;
   salePrice: number;
-  quantity: number;
+  quantity: number; // quantité disponible (1 pour un IMEI, stock_global pour accessoire)
 };
 
+// Un téléphone se scanne par IMEI (unité précise), un accessoire par EAN
+// (stock global, pas d'unité individuelle) — schéma réel produits/unites_imei.
 export async function scanArticle(code: string): Promise<
   { ok: true; product: ScannedProduct } | { ok: false; message: string }
 > {
   const supabase = createClient();
 
-  const { data, error } = await supabase
-    .from("stock_items")
-    .select(
-      "id, ean, imei, sale_price, quantity, status, condition, catalog_products(name, brand, category, image_url)"
-    )
-    .or(`imei.eq.${code},ean.eq.${code}`)
-    .eq("status", "en_stock")
-    .gt("quantity", 0)
-    .order("received_at", { ascending: true })
-    .limit(1)
+  const { data: unite } = await supabase
+    .from("unites_imei")
+    .select("id, imei, produit_id, produits(id, marque, modele, type, categorie, code_ean, image_url, prix_vente)")
+    .eq("imei", code)
+    .eq("statut", "EN_STOCK")
     .maybeSingle();
 
-  if (error || !data) {
-    return { ok: false, message: "Article introuvable ou rupture de stock." };
+  if (unite) {
+    const p = Array.isArray(unite.produits) ? unite.produits[0] : unite.produits;
+    if (!p) return { ok: false, message: "Article introuvable ou rupture de stock." };
+    return {
+      ok: true,
+      product: {
+        produitId: p.id,
+        uniteImeiId: unite.id,
+        ean: p.code_ean,
+        imei: unite.imei,
+        name: `${p.marque} ${p.modele}`,
+        brand: p.marque,
+        category: "telephone",
+        imageUrl: p.image_url,
+        salePrice: Number(p.prix_vente),
+        quantity: 1,
+      },
+    };
   }
 
-  const catalog = Array.isArray(data.catalog_products)
-    ? data.catalog_products[0]
-    : data.catalog_products;
+  const { data: produit } = await supabase
+    .from("produits")
+    .select("id, marque, modele, type, categorie, code_ean, image_url, prix_vente, stock_global")
+    .eq("code_ean", code)
+    .maybeSingle();
+
+  if (!produit || produit.stock_global <= 0) {
+    return { ok: false, message: "Article introuvable ou rupture de stock." };
+  }
 
   return {
     ok: true,
     product: {
-      stockItemId: data.id,
-      ean: data.ean,
-      imei: data.imei,
-      name: catalog?.name ?? "Article",
-      brand: catalog?.brand ?? "",
-      category: catalog?.category ?? "accessoire",
-      condition: data.condition,
-      imageUrl: catalog?.image_url ?? null,
-      salePrice: Number(data.sale_price),
-      quantity: data.quantity,
+      produitId: produit.id,
+      uniteImeiId: null,
+      ean: produit.code_ean,
+      imei: null,
+      name: `${produit.marque} ${produit.modele}`,
+      brand: produit.marque,
+      category: produit.type === "telephone" ? "telephone" : "accessoire",
+      imageUrl: produit.image_url,
+      salePrice: Number(produit.prix_vente),
+      quantity: produit.stock_global,
     },
   };
 }
 
-export async function sellArticle(stockItemId: string): Promise<
-  { ok: true; salePrice: number } | { ok: false; message: string }
-> {
-  const supabase = createClient();
-
-  const { data, error } = await supabase.rpc("sell_product", {
-    p_stock_item_id: stockItemId,
-  });
-
-  if (error) {
-    return { ok: false, message: error.message };
-  }
-
-  return { ok: true, salePrice: Number(data.sale_price) };
-}
-
 export type PaymentMethod = "mobile_money" | "especes" | "carte" | "virement" | "autre";
 
-export type CartLine = { stockItemId: string; quantity: number };
+export type CartLine = { produitId: string; uniteImeiId: string | null; quantity: number };
 
 export type SaleReceipt = {
   saleId: string;
@@ -87,7 +90,7 @@ export type SaleReceipt = {
 };
 
 // Vente panier : un ou plusieurs articles + mode de paiement, en une seule
-// transaction atomique côté base (voir la fonction create_sale).
+// transaction atomique côté base (create_sale, schéma produits/unites_imei).
 export async function createSale(
   items: CartLine[],
   paymentMethod: PaymentMethod
@@ -95,7 +98,11 @@ export async function createSale(
   const supabase = createClient();
 
   const { data, error } = await supabase.rpc("create_sale", {
-    p_items: items.map((i) => ({ stock_item_id: i.stockItemId, quantity: i.quantity })),
+    p_items: items.map((i) => ({
+      produit_id: i.produitId,
+      unite_imei_id: i.uniteImeiId,
+      quantity: i.quantity,
+    })),
     p_payment_method: paymentMethod,
   });
 
@@ -140,27 +147,22 @@ export async function searchStock(query: string) {
   const supabase = createClient();
 
   const { data, error } = await supabase
-    .from("stock_items")
-    .select("id, ean, sale_price, quantity, status, catalog_products(name, brand)")
-    .eq("status", "en_stock")
-    .ilike("catalog_products.name", `%${query}%`)
+    .from("stock_overview")
+    .select("produit_id, code_ean, marque, modele, prix_vente, quantite_disponible")
+    .ilike("modele", `%${query}%`)
+    .order("quantite_disponible", { ascending: false })
     .limit(20);
 
   if (error || !data) return [];
 
-  return data.map((row) => {
-    const catalog = Array.isArray(row.catalog_products)
-      ? row.catalog_products[0]
-      : row.catalog_products;
-    return {
-      id: row.id,
-      ean: row.ean,
-      name: catalog?.name ?? "Article",
-      brand: catalog?.brand ?? "",
-      price: Number(row.sale_price),
-      quantity: row.quantity,
-    };
-  });
+  return data.map((row) => ({
+    id: row.produit_id,
+    ean: row.code_ean,
+    name: `${row.marque} ${row.modele}`,
+    brand: row.marque,
+    price: Number(row.prix_vente),
+    quantity: row.quantite_disponible,
+  }));
 }
 
 const LOW_STOCK_THRESHOLD = 3;
@@ -170,7 +172,6 @@ export type LowStockItem = {
   name: string;
   brand: string;
   category: "telephone" | "accessoire";
-  condition: string;
   quantity: number;
 };
 
@@ -180,39 +181,32 @@ export type StockOverview = {
   lowStock: LowStockItem[];
 };
 
-// Vue d'ensemble stock : compteurs (RPC stock_overview) + articles sous le
-// seuil d'alerte (même seuil que le badge "stock-badge low" de la caisse).
+// Vue d'ensemble stock, directement sur la vue stock_overview réelle
+// (quantite_disponible = count(unites_imei EN_STOCK) pour un téléphone,
+// stock_global pour un accessoire).
 export async function getStockOverview(): Promise<StockOverview> {
   const supabase = createClient();
 
-  const [{ data: overview }, { data: lowStockRows }] = await Promise.all([
-    supabase.rpc("stock_overview").single<{ total_en_stock: number; ruptures: number }>(),
-    supabase
-      .from("stock_items")
-      .select("id, quantity, condition, catalog_products(name, brand, category)")
-      .eq("status", "en_stock")
-      .lte("quantity", LOW_STOCK_THRESHOLD)
-      .order("quantity", { ascending: true })
-      .limit(5),
-  ]);
+  const { data } = await supabase
+    .from("stock_overview")
+    .select("produit_id, type, marque, modele, quantite_disponible");
 
-  const lowStock: LowStockItem[] = (lowStockRows ?? []).map((row) => {
-    const catalog = Array.isArray(row.catalog_products) ? row.catalog_products[0] : row.catalog_products;
-    return {
-      id: row.id,
-      name: catalog?.name ?? "Article",
-      brand: catalog?.brand ?? "",
-      category: (catalog?.category as "telephone" | "accessoire") ?? "accessoire",
-      condition: row.condition,
-      quantity: row.quantity,
-    };
-  });
+  const rows = data ?? [];
+  const totalEnStock = rows.reduce((sum, r) => sum + Number(r.quantite_disponible), 0);
+  const ruptures = rows.filter((r) => Number(r.quantite_disponible) === 0).length;
+  const lowStock: LowStockItem[] = rows
+    .filter((r) => Number(r.quantite_disponible) > 0 && Number(r.quantite_disponible) <= LOW_STOCK_THRESHOLD)
+    .sort((a, b) => Number(a.quantite_disponible) - Number(b.quantite_disponible))
+    .slice(0, 5)
+    .map((r) => ({
+      id: r.produit_id,
+      name: r.modele,
+      brand: r.marque,
+      category: r.type === "telephone" ? "telephone" : "accessoire",
+      quantity: Number(r.quantite_disponible),
+    }));
 
-  return {
-    totalEnStock: overview?.total_en_stock ?? 0,
-    ruptures: overview?.ruptures ?? 0,
-    lowStock,
-  };
+  return { totalEnStock, ruptures, lowStock };
 }
 
 export async function raiseLowStockAlert(ean: string, note: string) {

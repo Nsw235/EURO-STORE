@@ -43,7 +43,11 @@ export async function sellCartWithOfflineFallback(
 
   if (typeof navigator !== "undefined" && navigator.onLine) {
     const { data, error } = await supabase.rpc("create_sale", {
-      p_items: items.map((i) => ({ stock_item_id: i.stockItemId, quantity: i.quantity })),
+      p_items: items.map((i) => ({
+        produit_id: i.produitId,
+        unite_imei_id: i.uniteImeiId,
+        quantity: i.quantity,
+      })),
       p_payment_method: paymentMethod,
     });
 
@@ -96,7 +100,11 @@ export async function syncPendingSales(): Promise<{ synced: number; failed: numb
 
   for (const sale of queue) {
     const { error } = await supabase.rpc("create_sale", {
-      p_items: sale.items.map((i) => ({ stock_item_id: i.stockItemId, quantity: i.quantity })),
+      p_items: sale.items.map((i) => ({
+        produit_id: i.produitId,
+        unite_imei_id: i.uniteImeiId,
+        quantity: i.quantity,
+      })),
       p_payment_method: sale.paymentMethod,
     });
     if (error) {
