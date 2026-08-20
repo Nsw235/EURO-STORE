@@ -238,7 +238,8 @@ body {
 }
 .processing .totalcard .tl { font-size: 11px; letter-spacing: .14em; color: var(--muted); }
 .processing .totalcard .tv { font-family: "Fraunces", serif; font-size: 30px; font-weight: 700; color: var(--gold); margin-top: 6px; }
-.footlock { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 22px; color: var(--muted); font-size: 12px; }
+.footlock { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 22px; color: var(--muted); font-size: 12px; }
+.btn-icon-inline { display: inline-flex; vertical-align: -2px; margin-right: 7px; }
 
 /* ── 5. Vente validée ── */
 .success-zone { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; overflow-y: auto; }
@@ -270,6 +271,10 @@ body {
 
 /* ── Dashboard ── */
 .dashboard { display: flex; flex-direction: column; }
+.eyebrow {
+  color: var(--muted); font-size: 10.5px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .08em;
+}
 .ca-total {
   color: var(--gold); font-family: "Fraunces", serif;
   font-weight: 700; font-size: 40px;
@@ -292,6 +297,37 @@ body {
 .stock-qty.out { color: #e27272; }
 .stock-price { color: var(--gold); font-size: 14px; font-weight: 600; }
 .empty { color: var(--muted); font-size: 12px; }
+
+/* ── Dashboard — section Stock ── */
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.stat-card {
+  background: var(--navy-800); border: 1px solid var(--navy-700);
+  border-radius: 12px; padding: 12px 14px;
+}
+.stat-card.danger { border-color: rgba(224, 104, 90, .4); }
+.stat-value { font-size: 20px; font-weight: 700; }
+.stat-card.danger .stat-value { color: var(--red); }
+.stat-label { color: var(--muted); font-size: 10.5px; margin-top: 2px; }
+
+.alert-label {
+  font-size: 10.5px; color: var(--muted); text-transform: uppercase;
+  letter-spacing: .08em; margin-bottom: 8px;
+}
+.alert-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+.alert-row {
+  background: var(--navy-800); border: 1px solid var(--navy-700);
+  border-radius: 12px; padding: 10px 12px;
+  display: flex; align-items: center; gap: 10px;
+}
+.alert-icon { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.alert-icon.telephone { background: var(--gold); }
+.alert-icon.accessoire { background: var(--muted); }
+.alert-info { flex: 1; min-width: 0; }
+.alert-name { font-size: 12.5px; font-weight: 500; }
+.alert-brand { color: var(--muted); font-size: 10.5px; margin-top: 2px; }
+.alert-badge { font-size: 11px; padding: 3px 8px; border-radius: 8px; flex-shrink: 0; }
+.alert-badge.low { background: rgba(224, 162, 74, .16); color: var(--orange); border: 1px solid rgba(224, 162, 74, .4); }
+.alert-badge.out { background: rgba(224, 104, 90, .16); color: var(--red); border: 1px solid rgba(224, 104, 90, .4); }
 
 /* ── Login ── */
 .login-screen {
