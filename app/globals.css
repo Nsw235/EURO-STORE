@@ -32,14 +32,43 @@ body {
 }
 
 .phone-header {
-  padding: 18px 20px 14px;
-  border-bottom: 1px solid var(--navy-700);
+  padding: 18px 20px 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
-.brand-logo { height: 30px; width: auto; display: block; }
-.subtitle { color: var(--muted); font-size: 11px; margin-top: 4px; }
+.brand-block { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; }
+.brand-badge {
+  padding: 6px 14px 6px 6px; border-radius: 12px;
+  background: linear-gradient(135deg, rgba(220, 184, 119, .16), rgba(220, 184, 119, .04));
+  border: 1px solid rgba(220, 184, 119, .25);
+  display: flex; align-items: center;
+}
+.brand-logo { height: 34px; width: auto; display: block; }
+.brand-locale { color: var(--gold); font-size: 8.5px; font-weight: 700; letter-spacing: .12em; padding-left: 2px; }
+.subtitle-row {
+  color: var(--muted); font-size: 11px; padding: 0 20px 14px;
+  border-bottom: 1px solid var(--navy-700);
+}
+
+/* ── Drapeau tchadien : accent discret (bleu / jaune / rouge) ── */
+.flag-stripe { height: 3px; display: flex; }
+.flag-stripe span { flex: 1; }
+.flag-stripe .b { background: #0033a0; }
+.flag-stripe .y { background: #ffd100; }
+.flag-stripe .r { background: #d21034; }
+
+/* ── Double devise FCFA / EUR ── */
+.price-fcfa { font-family: var(--font-voice); color: var(--gold-light); font-weight: 700; }
+.price-eur { color: var(--muted); font-size: 0.75em; margin-top: 2px; }
+.streak-badge {
+  background: rgba(220, 184, 119, .12); border: 1px solid rgba(220, 184, 119, .3);
+  border-radius: 20px; padding: 3px 9px; display: inline-flex; align-items: center; gap: 5px;
+  color: var(--gold); font-size: 10px; font-weight: 700;
+}
+
+/* ── Confettis discrets aux couleurs du Tchad (écran succès) ── */
+.confetti { position: absolute; width: 5px; height: 5px; border-radius: 1px; }
 .avatar {
   width: 34px; height: 34px; border-radius: 50%;
   background: var(--navy-700); border: 1px solid var(--gold);
