@@ -73,7 +73,7 @@ export async function sellArticle(stockItemId: string): Promise<
   return { ok: true, salePrice: Number(data.sale_price) };
 }
 
-export type PaymentMethod = "especes" | "carte" | "virement" | "autre";
+export type PaymentMethod = "mobile_money" | "especes" | "carte" | "virement" | "autre";
 
 export type CartLine = { stockItemId: string; quantity: number };
 
