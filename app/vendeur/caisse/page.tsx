@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { scanArticle, raiseLowStockAlert, type ScannedProduct } from "@/lib/vendeur-actions";
+import { useEffect, useRef, useState } from "react";
+import { scanArticle, raiseLowStockAlert, getCaDuJour, type ScannedProduct } from "@/lib/vendeur-actions";
 import type { PaymentMethod, SaleReceipt } from "@/lib/vendeur-actions";
 import { sellCartWithOfflineFallback } from "@/lib/offline-queue";
+import { formatDual } from "@/lib/currency";
 
 type Screen = "scan" | "panier" | "paiement" | "encours" | "validee" | "error";
 
@@ -20,11 +21,64 @@ type CartItem = {
   qty: number; // quantité dans le panier
 };
 
-const PAYMENT_OPTIONS: { id: PaymentMethod; label: string; sub: string }[] = [
-  { id: "especes", label: "Espèces", sub: "Paiement en liquide" },
-  { id: "carte", label: "Carte bancaire", sub: "Carte de crédit / débit" },
-  { id: "virement", label: "Virement / QR code", sub: "Paiement par virement" },
-  { id: "autre", label: "Autre", sub: "Autre moyen de paiement" },
+const PAYMENT_OPTIONS: { id: PaymentMethod; label: string; sub: string; icon: React.ReactNode }[] = [
+  {
+    id: "mobile_money",
+    label: "Mobile Money",
+    sub: "Airtel Money / Moov Money",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <rect x="6" y="2" width="12" height="20" rx="2.5" />
+        <path d="M10 18h4" />
+      </svg>
+    ),
+  },
+  {
+    id: "especes",
+    label: "Espèces",
+    sub: "Paiement en liquide",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <rect x="2" y="6" width="20" height="12" rx="2" />
+        <circle cx="12" cy="12" r="3" />
+      </svg>
+    ),
+  },
+  {
+    id: "carte",
+    label: "Carte bancaire",
+    sub: "Carte de crédit / débit",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <rect x="2" y="5" width="20" height="14" rx="2" />
+        <path d="M2 10h20" />
+      </svg>
+    ),
+  },
+  {
+    id: "virement",
+    label: "Virement / QR code",
+    sub: "Paiement par virement",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <rect x="3" y="3" width="7" height="7" />
+        <rect x="14" y="3" width="7" height="7" />
+        <rect x="3" y="14" width="7" height="7" />
+        <path d="M14 14h3v3h-3zM20 14v3M14 20h3M20 20h.01" />
+      </svg>
+    ),
+  },
+  {
+    id: "autre",
+    label: "Autre",
+    sub: "Autre moyen de paiement",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 8v4M12 16h.01" />
+      </svg>
+    ),
+  },
 ];
 
 export default function CaissePage() {
@@ -33,15 +87,20 @@ export default function CaissePage() {
   const [modalProduct, setModalProduct] = useState<ScannedProduct | null>(null);
   const [photoFailed, setPhotoFailed] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("especes");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("mobile_money");
   const [receipt, setReceipt] = useState<SaleReceipt | null>(null);
   const [offlineSale, setOfflineSale] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [showAlert, setShowAlert] = useState(false);
+  const [ventesDuJour, setVentesDuJour] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const cartTotal = cart.reduce((sum, i) => sum + i.unitPrice * i.qty, 0);
   const cartCount = cart.reduce((sum, i) => sum + i.qty, 0);
+
+  useEffect(() => {
+    getCaDuJour().then((ca) => setVentesDuJour(ca.nbVentes));
+  }, []);
 
   async function handleScan(code: string) {
     if (!code || scanning) return;
@@ -126,6 +185,7 @@ export default function CaissePage() {
       setReceipt(result.sale);
     }
     setScreen("validee");
+    setVentesDuJour((n) => (n ?? 0) + 1);
   }
 
   function reset() {
@@ -143,6 +203,20 @@ export default function CaissePage() {
       {/* ============ 1. SCAN ============ */}
       {screen === "scan" && (
         <div className="scan-zone">
+          <div className="flag-stripe" style={{ margin: "-20px -20px 16px" }}>
+            <span className="b" /><span className="y" /><span className="r" />
+          </div>
+
+          {ventesDuJour !== null && ventesDuJour > 0 && (
+            <div className="streak-badge" style={{ marginBottom: 14 }}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M13 2L3 14h7l-1 8 11-14h-7l1-6z" />
+              </svg>
+              {ventesDuJour}
+              {ventesDuJour === 1 ? "re" : "e"} vente du jour
+            </div>
+          )}
+
           <div className="viewfinder">
             <div className="corner tl" />
             <div className="corner tr" />
@@ -187,7 +261,14 @@ export default function CaissePage() {
           {cart.length > 0 && (
             <div className="cart-actions" style={{ marginTop: "auto" }}>
               <button className="btn-outline" onClick={() => setScreen("panier")}>
-                🛒 {cartCount} article{cartCount > 1 ? "s" : ""} · {cartTotal.toFixed(2)} €
+                <span className="btn-icon-inline" aria-hidden="true">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="9" cy="21" r="1" />
+                    <circle cx="20" cy="21" r="1" />
+                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+                  </svg>
+                </span>
+                {cartCount} article{cartCount > 1 ? "s" : ""} · {formatDual(cartTotal).fcfa} F
               </button>
               <button className="btn-gold" onClick={() => setScreen("panier")}>
                 Voir le panier →
@@ -238,7 +319,10 @@ export default function CaissePage() {
                 </div>
               </div>
             </div>
-            <div className="modal-price">{modalProduct.salePrice.toFixed(2)} €</div>
+            <div className="modal-price price-fcfa">{formatDual(modalProduct.salePrice).fcfa} FCFA</div>
+            <div className="price-eur" style={{ textAlign: "center", marginTop: -6, marginBottom: 10 }}>
+              ≈ {formatDual(modalProduct.salePrice).eur} €
+            </div>
             <div className="modal-actions">
               <button className="btn-cancel" onClick={() => setModalProduct(null)}>
                 Annuler
@@ -287,7 +371,8 @@ export default function CaissePage() {
                     </div>
                     <div>
                       <div className="price-label">Prix</div>
-                      <div className="price-val">{(item.unitPrice * item.qty).toFixed(2)} €</div>
+                      <div className="price-val price-fcfa">{formatDual(item.unitPrice * item.qty).fcfa} F</div>
+                      <div className="price-eur">≈ {formatDual(item.unitPrice * item.qty).eur} €</div>
                     </div>
                   </div>
                 </div>
@@ -296,23 +381,36 @@ export default function CaissePage() {
               <div className="cart-card">
                 <div className="summary-row">
                   <span>Sous-total</span>
-                  <span>{cartTotal.toFixed(2)} €</span>
+                  <span>{formatDual(cartTotal).fcfa} F <span className="price-eur">(≈ {formatDual(cartTotal).eur} €)</span></span>
                 </div>
                 <div className="summary-divider" />
                 <div className="summary-row">
                   <span>TVA (20 %)</span>
-                  <span>{Math.round((cartTotal - cartTotal / 1.2) * 100) / 100} €</span>
+                  <span>
+                    {formatDual(Math.round((cartTotal - cartTotal / 1.2) * 100) / 100).fcfa} F{" "}
+                    <span className="price-eur">
+                      (≈ {formatDual(Math.round((cartTotal - cartTotal / 1.2) * 100) / 100).eur} €)
+                    </span>
+                  </span>
                 </div>
               </div>
 
               <div className="grand-total">
                 <span className="label">Total :</span>
-                <span className="amount">{cartTotal.toFixed(2)} €</span>
+                <span className="amount price-fcfa">{formatDual(cartTotal).fcfa} FCFA</span>
+              </div>
+              <div className="price-eur" style={{ textAlign: "right", marginTop: -8 }}>
+                ≈ {formatDual(cartTotal).eur} €
               </div>
 
               <div className="cart-actions">
                 <button className="btn-outline" onClick={() => setScreen("scan")}>
-                  ✎ Modifier le panier
+                  <span className="btn-icon-inline" aria-hidden="true">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                    </svg>
+                  </span>
+                  Modifier le panier
                 </button>
                 <button className="btn-gold" onClick={() => setScreen("paiement")}>
                   Valider la vente →
@@ -328,7 +426,10 @@ export default function CaissePage() {
         <div className="scan-zone">
           <div className="h-page" style={{ marginBottom: 4 }}>Paiement</div>
           <div className="pay-amount-label">MONTANT À PAYER</div>
-          <div className="pay-amount">{cartTotal.toFixed(2)} €</div>
+          <div className="pay-amount price-fcfa">{formatDual(cartTotal).fcfa} FCFA</div>
+          <div className="price-eur" style={{ textAlign: "center", marginBottom: 8 }}>
+            ≈ {formatDual(cartTotal).eur} €
+          </div>
 
           <div className="pay-section-label">MODE DE PAIEMENT</div>
           <div className="pay-options">
@@ -338,12 +439,7 @@ export default function CaissePage() {
                 className={`pay-option ${paymentMethod === opt.id ? "selected" : ""}`}
                 onClick={() => setPaymentMethod(opt.id)}
               >
-                <span className="pay-icon">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="2" y="5" width="20" height="14" rx="2" />
-                    <path d="M2 10h20" />
-                  </svg>
-                </span>
+                <span className="pay-icon">{opt.icon}</span>
                 <span className="pay-text">
                   <h4>{opt.label}</h4>
                   <p>{opt.sub}</p>
@@ -369,22 +465,37 @@ export default function CaissePage() {
           <p className="sub">Veuillez patienter ou présenter la carte,</p>
           <div className="totalcard">
             <div className="tl">TOTAL</div>
-            <div className="tv">{cartTotal.toFixed(2)} €</div>
+            <div className="tv price-fcfa">{formatDual(cartTotal).fcfa} FCFA</div>
+            <div className="price-eur">≈ {formatDual(cartTotal).eur} €</div>
           </div>
-          <div className="footlock">🔒 Paiement sécurisé et crypté</div>
+          <div className="footlock">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            Paiement sécurisé et crypté
+          </div>
         </div>
       )}
 
       {/* ============ 5. VENTE VALIDÉE ============ */}
       {screen === "validee" && receipt && (
-        <div className="success-zone">
+        <div className="success-zone" style={{ position: "relative", overflow: "hidden" }}>
+          <span className="confetti" style={{ top: 10, left: 30, background: "#0033a0" }} />
+          <span className="confetti" style={{ top: 26, left: 60, background: "#ffd100" }} />
+          <span className="confetti" style={{ top: 16, right: 34, background: "#d21034" }} />
+          <span className="confetti" style={{ top: 44, right: 54, width: 4, height: 4, background: "#0033a0" }} />
+          <span className="confetti" style={{ top: 36, left: 90, width: 4, height: 4, background: "#d21034" }} />
+          <span className="confetti" style={{ top: 52, right: 24, background: "#ffd100" }} />
+
           <div className="check-ring">
             <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
               <path d="M5 13l4 4L19 7" />
             </svg>
           </div>
           <h2>Vente validée !{offlineSale ? " (hors-ligne)" : ""}</h2>
-          <div className="success-amount">{receipt.total.toFixed(2)} €</div>
+          <div className="success-amount price-fcfa">{formatDual(receipt.total).fcfa} FCFA</div>
+          <div className="price-eur" style={{ textAlign: "center" }}>≈ {formatDual(receipt.total).eur} €</div>
           <div className="success-meta">
             {new Date(receipt.soldAt).toLocaleDateString("fr-FR")} ·{" "}
             {new Date(receipt.soldAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
@@ -392,8 +503,25 @@ export default function CaissePage() {
           <div className="success-txn">ID Transaction : {receipt.saleId}</div>
 
           <div className="success-actions">
-            <button className="btn-gold" onClick={() => window.print()}>🖶 Imprimer le ticket</button>
-            <button className="btn-outline">➤ Envoyer par email / SMS</button>
+            <button className="btn-gold" onClick={() => window.print()}>
+              <span className="btn-icon-inline" aria-hidden="true">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M6 9V2h12v7" />
+                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                  <rect x="6" y="14" width="12" height="8" />
+                </svg>
+              </span>
+              Imprimer le ticket
+            </button>
+            <button className="btn-outline">
+              <span className="btn-icon-inline" aria-hidden="true">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M22 2L11 13" />
+                  <path d="M22 2l-7 20-4-9-9-4 20-7z" />
+                </svg>
+              </span>
+              Envoyer par email / SMS
+            </button>
           </div>
           <button className="success-link" onClick={reset}>Nouvelle vente →</button>
 
@@ -403,10 +531,18 @@ export default function CaissePage() {
             {cart.map((item) => (
               <div className="receipt-line" key={item.stockItemId}>
                 <span>{item.qty} × {item.name}</span>
-                <span>{(item.unitPrice * item.qty).toFixed(2)} €</span>
+                <span>
+                  {formatDual(item.unitPrice * item.qty).fcfa} F{" "}
+                  <span className="price-eur">(≈{formatDual(item.unitPrice * item.qty).eur}€)</span>
+                </span>
               </div>
             ))}
-            <div className="receipt-total"><span>TOTAL</span><span>{receipt.total.toFixed(2)} €</span></div>
+            <div className="receipt-total">
+              <span>TOTAL</span>
+              <span>
+                {formatDual(receipt.total).fcfa} FCFA <span className="price-eur">(≈{formatDual(receipt.total).eur}€)</span>
+              </span>
+            </div>
             <div className="receipt-thanks">Merci pour votre confiance.</div>
           </div>
         </div>
