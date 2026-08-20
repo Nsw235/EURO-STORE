@@ -24,10 +24,7 @@ export default async function StockOverview() {
               <div className="alert-row" key={item.id}>
                 <span className={`alert-icon ${item.category}`} aria-hidden="true" />
                 <div className="alert-info">
-                  <div className="alert-name">
-                    {item.name}
-                    {item.condition !== "neuf" ? ` · ${item.condition}` : ""}
-                  </div>
+                  <div className="alert-name">{item.name}</div>
                   <div className="alert-brand">{item.brand}</div>
                 </div>
                 <span className={`alert-badge ${item.quantity === 0 ? "out" : "low"}`}>
