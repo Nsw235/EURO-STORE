@@ -163,6 +163,58 @@ export async function searchStock(query: string) {
   });
 }
 
+const LOW_STOCK_THRESHOLD = 3;
+
+export type LowStockItem = {
+  id: string;
+  name: string;
+  brand: string;
+  category: "telephone" | "accessoire";
+  condition: string;
+  quantity: number;
+};
+
+export type StockOverview = {
+  totalEnStock: number;
+  ruptures: number;
+  lowStock: LowStockItem[];
+};
+
+// Vue d'ensemble stock : compteurs (RPC stock_overview) + articles sous le
+// seuil d'alerte (même seuil que le badge "stock-badge low" de la caisse).
+export async function getStockOverview(): Promise<StockOverview> {
+  const supabase = createClient();
+
+  const [{ data: overview }, { data: lowStockRows }] = await Promise.all([
+    supabase.rpc("stock_overview").single<{ total_en_stock: number; ruptures: number }>(),
+    supabase
+      .from("stock_items")
+      .select("id, quantity, condition, catalog_products(name, brand, category)")
+      .eq("status", "en_stock")
+      .lte("quantity", LOW_STOCK_THRESHOLD)
+      .order("quantity", { ascending: true })
+      .limit(5),
+  ]);
+
+  const lowStock: LowStockItem[] = (lowStockRows ?? []).map((row) => {
+    const catalog = Array.isArray(row.catalog_products) ? row.catalog_products[0] : row.catalog_products;
+    return {
+      id: row.id,
+      name: catalog?.name ?? "Article",
+      brand: catalog?.brand ?? "",
+      category: (catalog?.category as "telephone" | "accessoire") ?? "accessoire",
+      condition: row.condition,
+      quantity: row.quantity,
+    };
+  });
+
+  return {
+    totalEnStock: overview?.total_en_stock ?? 0,
+    ruptures: overview?.ruptures ?? 0,
+    lowStock,
+  };
+}
+
 export async function raiseLowStockAlert(ean: string, note: string) {
   const supabase = createClient();
 
