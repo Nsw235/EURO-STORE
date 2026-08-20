@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { searchStock } from "@/lib/vendeur-actions";
+import { formatDual } from "@/lib/currency";
 
 type Row = { id: string; ean: string; name: string; brand: string; price: number; quantity: number };
 
@@ -36,7 +37,10 @@ export default function StockSearch() {
                 {r.quantity === 0 ? "Rupture de stock" : `${r.quantity} en stock`}
               </div>
             </div>
-            <div className="stock-price">{r.price.toFixed(0)}€</div>
+            <div style={{ textAlign: "right" }}>
+              <div className="stock-price price-fcfa">{formatDual(r.price).fcfa} F</div>
+              <div className="price-eur">≈ {formatDual(r.price).eur} €</div>
+            </div>
           </div>
         ))}
         {!isPending && rows.length === 0 && <p className="empty">Aucun article trouvé.</p>}

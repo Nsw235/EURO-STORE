@@ -27,15 +27,19 @@ export default function VendeurShell({
     <div className="phone-shell">
       <RegisterSW />
       <header className="phone-header">
-        <div>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-header.png" alt="EURO STORE" className="brand-logo" />
-          <div className="subtitle">
-            {isCaisse ? "Vue vendeur · Comptoir & caisse" : "Vue vendeur · Tableau de bord"}
+        <div className="brand-block">
+          <div className="brand-badge">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-header.png" alt="EURO STORE" className="brand-logo" />
           </div>
+          <div className="brand-locale">N&apos;DJAMENA · TCHAD</div>
         </div>
         <div className="avatar">{initials}</div>
       </header>
+
+      <div className="subtitle-row">
+        {isCaisse ? "Vue vendeur · Comptoir & caisse" : "Vue vendeur · Tableau de bord"}
+      </div>
 
       {!isOnline && (
         <div className="offline-banner">
