@@ -9,7 +9,9 @@ import { formatDual } from "@/lib/currency";
 type Screen = "scan" | "panier" | "paiement" | "encours" | "validee" | "error";
 
 type CartItem = {
-  stockItemId: string;
+  lineId: string; // uniteImeiId si téléphone (unité précise), sinon produitId
+  produitId: string;
+  uniteImeiId: string | null;
   ean: string;
   imei: string | null;
   name: string;
@@ -118,18 +120,19 @@ export default function CaissePage() {
 
   function addToCart() {
     if (!modalProduct) return;
+    const lineId = modalProduct.uniteImeiId ?? modalProduct.produitId;
     setCart((prev) => {
-      const existing = prev.find((i) => i.stockItemId === modalProduct.stockItemId);
+      const existing = prev.find((i) => i.lineId === lineId);
       if (existing) {
         const nextQty = Math.min(existing.qty + 1, modalProduct.quantity);
-        return prev.map((i) =>
-          i.stockItemId === modalProduct.stockItemId ? { ...i, qty: nextQty } : i
-        );
+        return prev.map((i) => (i.lineId === lineId ? { ...i, qty: nextQty } : i));
       }
       return [
         ...prev,
         {
-          stockItemId: modalProduct.stockItemId,
+          lineId,
+          produitId: modalProduct.produitId,
+          uniteImeiId: modalProduct.uniteImeiId,
           ean: modalProduct.ean,
           imei: modalProduct.imei,
           name: modalProduct.name,
@@ -147,11 +150,11 @@ export default function CaissePage() {
     inputRef.current?.focus();
   }
 
-  function changeQty(stockItemId: string, delta: number) {
+  function changeQty(lineId: string, delta: number) {
     setCart((prev) =>
       prev
         .map((i) =>
-          i.stockItemId === stockItemId
+          i.lineId === lineId
             ? { ...i, qty: Math.max(0, Math.min(i.qty + delta, i.availableQty)) }
             : i
         )
@@ -162,7 +165,7 @@ export default function CaissePage() {
   async function confirmPayment() {
     setScreen("encours");
     const result = await sellCartWithOfflineFallback(
-      cart.map((i) => ({ stockItemId: i.stockItemId, quantity: i.qty })),
+      cart.map((i) => ({ produitId: i.produitId, uniteImeiId: i.uniteImeiId, quantity: i.qty })),
       paymentMethod
     );
     if (!result.ok) {
@@ -311,7 +314,7 @@ export default function CaissePage() {
               </div>
               <div className="product-info">
                 <h3>{modalProduct.name}</h3>
-                <div className="variant">{modalProduct.brand} · {modalProduct.condition}</div>
+                <div className="variant">{modalProduct.brand}</div>
                 <div className="code">
                   {modalProduct.category === "telephone"
                     ? `IMEI : ${modalProduct.imei}`
@@ -345,7 +348,7 @@ export default function CaissePage() {
           ) : (
             <>
               {cart.map((item) => (
-                <div className="cart-card" key={item.stockItemId}>
+                <div className="cart-card" key={item.lineId}>
                   <div className="cart-item">
                     <div className="cart-photo">
                       {item.imageUrl ? (
@@ -364,9 +367,9 @@ export default function CaissePage() {
                     <div>
                       <div className="qty-label">Quantité</div>
                       <div className="qty-stepper">
-                        <button className="qty-btn" onClick={() => changeQty(item.stockItemId, -1)}>–</button>
+                        <button className="qty-btn" onClick={() => changeQty(item.lineId, -1)}>–</button>
                         <span className="val">{item.qty}</span>
-                        <button className="qty-btn" onClick={() => changeQty(item.stockItemId, 1)}>+</button>
+                        <button className="qty-btn" onClick={() => changeQty(item.lineId, 1)}>+</button>
                       </div>
                     </div>
                     <div>
@@ -529,7 +532,7 @@ export default function CaissePage() {
             <div className="receipt-header-row"><span>ARTICLES</span><span>TOTAL</span></div>
             <hr />
             {cart.map((item) => (
-              <div className="receipt-line" key={item.stockItemId}>
+              <div className="receipt-line" key={item.lineId}>
                 <span>{item.qty} × {item.name}</span>
                 <span>
                   {formatDual(item.unitPrice * item.qty).fcfa} F{" "}
