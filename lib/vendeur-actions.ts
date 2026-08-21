@@ -143,6 +143,71 @@ export async function getCaDuJour(): Promise<{
   };
 }
 
+// CA du jour + variation réelle vs la veille (null si pas de données hier,
+// on n'invente jamais un pourcentage).
+export async function getCaComparaison(): Promise<{
+  total: number;
+  nbVentes: number;
+  panierMoyen: number;
+  variationPct: number | null;
+}> {
+  const supabase = createClient();
+
+  const [today, { data: veille }] = await Promise.all([
+    getCaDuJour(),
+    supabase.rpc("ca_veille").single<{ total: number }>(),
+  ]);
+
+  const hier = Number(veille?.total ?? 0);
+  const variationPct = hier > 0 ? Math.round(((today.total - hier) / hier) * 1000) / 10 : null;
+
+  return { ...today, variationPct };
+}
+
+export type VenteRecente = { id: string; displayId: string; total: number; soldAt: string };
+
+export async function getVentesRecentes(limit = 4): Promise<VenteRecente[]> {
+  const supabase = createClient();
+  const { data } = await supabase.rpc("recent_sales", { p_limit: limit });
+  return (data ?? []).map((row: { id: string; display_id: string; total: number; sold_at: string }) => ({
+    id: row.id,
+    displayId: row.display_id,
+    total: Number(row.total),
+    soldAt: row.sold_at,
+  }));
+}
+
+// Courbe du CA cumulé du jour, panier par panier (données réelles) — pas une
+// tendance inventée. Retourne un total cumulé par panier, dans l'ordre.
+export async function getCaSparkline(): Promise<number[]> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const { data } = await supabase
+    .from("transactions")
+    .select("sale_id, id, sale_price, quantity, sold_at")
+    .eq("sold_by", user.id)
+    .gte("sold_at", startOfDay.toISOString())
+    .order("sold_at", { ascending: true });
+
+  if (!data || data.length === 0) return [];
+
+  const baskets = new Map<string, number>();
+  for (const row of data) {
+    const basketId = row.sale_id ?? row.id;
+    baskets.set(basketId, (baskets.get(basketId) ?? 0) + Number(row.sale_price) * row.quantity);
+  }
+
+  let cumul = 0;
+  return Array.from(baskets.values()).map((t) => (cumul += t));
+}
+
 export async function searchStock(query: string) {
   const supabase = createClient();
 
@@ -171,6 +236,7 @@ export type LowStockItem = {
   id: string;
   name: string;
   brand: string;
+  ean: string;
   category: "telephone" | "accessoire";
   quantity: number;
 };
@@ -189,7 +255,7 @@ export async function getStockOverview(): Promise<StockOverview> {
 
   const { data } = await supabase
     .from("stock_overview")
-    .select("produit_id, type, marque, modele, quantite_disponible");
+    .select("produit_id, type, marque, modele, code_ean, quantite_disponible");
 
   const rows = data ?? [];
   const totalEnStock = rows.reduce((sum, r) => sum + Number(r.quantite_disponible), 0);
@@ -202,6 +268,7 @@ export async function getStockOverview(): Promise<StockOverview> {
       id: r.produit_id,
       name: r.modele,
       brand: r.marque,
+      ean: r.code_ean,
       category: r.type === "telephone" ? "telephone" : "accessoire",
       quantity: Number(r.quantite_disponible),
     }));
