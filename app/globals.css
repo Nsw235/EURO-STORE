@@ -37,19 +37,22 @@ body {
   align-items: center;
   justify-content: space-between;
 }
-.brand-block { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; }
-.brand-badge {
-  padding: 6px 14px 6px 6px; border-radius: 12px;
-  background: linear-gradient(135deg, rgba(220, 184, 119, .16), rgba(220, 184, 119, .04));
-  border: 1px solid rgba(220, 184, 119, .25);
-  display: flex; align-items: center;
+.brand-block { display: flex; align-items: center; gap: 10px; }
+.brand-mark {
+  width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+  border: 1.5px solid var(--gold); color: var(--gold);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-voice); font-size: 19px; font-weight: 600;
 }
-.brand-logo { height: 34px; width: auto; display: block; }
-.brand-locale { color: var(--gold); font-size: 8.5px; font-weight: 700; letter-spacing: .12em; padding-left: 2px; }
-.subtitle-row {
-  color: var(--muted); font-size: 11px; padding: 0 20px 14px;
-  border-bottom: 1px solid var(--navy-700);
+.brand-wordmark {
+  font-family: var(--font-voice); color: var(--gold-light);
+  font-size: 15px; font-weight: 600; letter-spacing: .05em;
 }
+.datetime-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 20px 14px; color: var(--muted); font-size: 11.5px;
+}
+.datetime-item { display: flex; align-items: center; gap: 6px; }
 
 /* ── Drapeau tchadien : accent discret (bleu / jaune / rouge) ── */
 .flag-stripe { height: 3px; display: flex; }
@@ -88,7 +91,8 @@ body {
 }
 .bottom-nav a {
   flex: 1; text-align: center; padding: 12px 4px 16px;
-  color: var(--muted); text-decoration: none; font-size: 11px; font-weight: 500;
+  color: var(--muted); text-decoration: none; font-size: 10.5px; font-weight: 600;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
 }
 .bottom-nav a.active { color: var(--gold); }
 
@@ -327,16 +331,52 @@ body {
 .stock-price { color: var(--gold); font-size: 14px; font-weight: 600; }
 .empty { color: var(--muted); font-size: 12px; }
 
-/* ── Dashboard — section Stock ── */
-.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
-.stat-card {
+/* ── Dashboard — carte CA du jour ── */
+.ca-card {
   background: var(--navy-800); border: 1px solid var(--navy-700);
-  border-radius: 12px; padding: 12px 14px;
+  border-radius: 16px; padding: 16px 18px; margin-bottom: 16px;
 }
-.stat-card.danger { border-color: rgba(224, 104, 90, .4); }
-.stat-value { font-size: 20px; font-weight: 700; }
-.stat-card.danger .stat-value { color: var(--red); }
-.stat-label { color: var(--muted); font-size: 10.5px; margin-top: 2px; }
+.ca-card-head { display: flex; align-items: flex-start; justify-content: space-between; }
+.trend-pill {
+  background: rgba(79, 191, 122, .14); color: #6fd695;
+  border: 1px solid rgba(79, 191, 122, .35);
+  border-radius: 20px; padding: 4px 11px; font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; gap: 4px; flex-shrink: 0;
+}
+.trend-pill.down { background: rgba(224, 104, 90, .14); color: #ef8f85; border-color: rgba(224, 104, 90, .35); }
+
+/* ── Dashboard — cartes stock (icône + barre de proportion) ── */
+.stock-card-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.stock-icon-card {
+  background: var(--navy-800); border: 1px solid var(--navy-700);
+  border-radius: 14px; padding: 14px;
+}
+.stock-icon-sq {
+  width: 34px; height: 34px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center; margin-bottom: 10px;
+}
+.stock-icon-sq.blue { background: rgba(55, 138, 221, .14); color: #6fadec; }
+.stock-icon-sq.danger { background: rgba(224, 104, 90, .14); color: var(--red); }
+.stock-icon-card .value { font-size: 24px; font-weight: 700; font-family: var(--font-voice); color: var(--ivory); }
+.stock-icon-card .value.danger { color: var(--red); }
+.stock-icon-card .label { font-size: 11px; font-weight: 600; margin-top: 2px; }
+.stock-icon-card .label.blue { color: #6fadec; }
+.stock-icon-card .label.danger { color: var(--red); }
+.stock-bar { height: 3px; border-radius: 2px; background: var(--navy-700); margin-top: 10px; overflow: hidden; }
+.stock-bar-fill { height: 100%; background: #378add; }
+.stock-bar-fill.danger { background: var(--red); }
+
+/* ── Dashboard — lignes ventes récentes ── */
+.sale-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; }
+.sale-check {
+  width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;
+  background: rgba(79, 191, 122, .14); color: #4fbf7a;
+  display: flex; align-items: center; justify-content: center;
+}
+.sale-info { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 8px; }
+.sale-id { color: var(--ivory); font-size: 12.5px; font-weight: 700; flex-shrink: 0; }
+.sale-time { color: var(--muted); font-size: 11px; }
+.sale-amount { color: var(--ivory); font-size: 12.5px; font-weight: 700; flex-shrink: 0; }
 
 .alert-label {
   font-size: 10.5px; color: var(--muted); text-transform: uppercase;
@@ -348,9 +388,8 @@ body {
   border-radius: 12px; padding: 10px 12px;
   display: flex; align-items: center; gap: 10px;
 }
-.alert-icon { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.alert-icon.telephone { background: var(--gold); }
-.alert-icon.accessoire { background: var(--muted); }
+.alert-icon { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: var(--orange); }
+.alert-icon.danger { background: var(--red); }
 .alert-info { flex: 1; min-width: 0; }
 .alert-name { font-size: 12.5px; font-weight: 500; }
 .alert-brand { color: var(--muted); font-size: 10.5px; margin-top: 2px; }
